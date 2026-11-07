@@ -103,3 +103,45 @@
 [data-phx-session], [data-phx-teleported-src] { display: contents }
 
 /* This file is for your main application CSS */
+
+:root {
+  color-scheme: light;
+}
+
+button:not(:disabled),
+a[href],
+[role="button"],
+input[type="submit"]:not(:disabled),
+input[type="button"]:not(:disabled),
+input[type="reset"]:not(:disabled),
+summary {
+  cursor: pointer;
+}
+
+button:disabled,
+input[type="submit"]:disabled,
+input[type="button"]:disabled,
+input[type="reset"]:disabled {
+  cursor: not-allowed;
+}
+
+.flash-toast {
+  animation: trace-meet-flash-dismiss 200ms ease 9.8s forwards;
+}
+
+@keyframes trace-meet-flash-dismiss {
+  from {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  to {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+}
+
+:root {
+  color-scheme: light !important;
+}
