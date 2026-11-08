@@ -88,6 +88,45 @@ defmodule TraceMeetWeb.UIComponents do
     """
   end
 
+  attr :field, Phoenix.HTML.FormField, required: true
+  attr :label, :string, default: nil
+  attr :placeholder, :string, default: nil
+  attr :rows, :integer, default: 4
+  attr :class, :any, default: nil
+  attr :rest, :global
+
+  def textarea(assigns) do
+    errors = Enum.map(assigns.field.errors, &translate_error/1)
+    assigns = assign(assigns, :errors, errors)
+
+    ~H"""
+    <div class="space-y-1.5">
+      <label :if={@label} for={@field.id} class="block text-sm font-medium text-[#26352B]">
+        {@label}
+      </label>
+      <textarea
+        id={@field.id}
+        name={@field.name}
+        rows={@rows}
+        placeholder={@placeholder}
+        aria-invalid={@errors != []}
+        aria-describedby={if @errors != [], do: "#{@field.id}-errors"}
+        class={[
+          "block w-full rounded-lg border bg-white px-3.5 py-3 text-sm text-[#17231C] shadow-sm outline-none transition",
+          "placeholder:text-[#9AA69D] focus:border-[#087C43] focus:ring-4 focus:ring-[#087C43]/10",
+          @errors == [] && "border-[#DCE5DE]",
+          @errors != [] && "border-red-500 focus:border-red-500 focus:ring-red-500/10",
+          @class
+        ]}
+        {@rest}
+      >{@field.value}</textarea>
+      <div :if={@errors != []} id={"#{@field.id}-errors"} class="space-y-1" role="alert">
+        <p :for={error <- @errors} class="text-sm text-red-600">{error}</p>
+      </div>
+    </div>
+    """
+  end
+
   attr :type, :string, default: "button"
   attr :variant, :string, default: "primary", values: ~w(primary secondary)
   attr :class, :any, default: nil

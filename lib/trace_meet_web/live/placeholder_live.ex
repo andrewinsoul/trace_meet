@@ -2,13 +2,6 @@ defmodule TraceMeetWeb.PlaceholderLive do
   use TraceMeetWeb, :live_view
 
   @pages %{
-    clients: %{
-      title: "Clients",
-      eyebrow: "CLIENT RELATIONSHIPS",
-      description: "Keep your client records organized in one place.",
-      message: "Your clients will appear here",
-      detail: "You'll be able to create, view and manage your client records from this workspace."
-    },
     meetings: %{
       title: "Meetings",
       eyebrow: "MEETING WORKSPACE",

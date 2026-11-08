@@ -76,7 +76,7 @@ defmodule TraceMeetWeb do
       use Gettext, backend: TraceMeetWeb.Gettext
       import Phoenix.HTML
 
-      import TraceMeetWeb.UIComponents, only: [input: 1, button: 1, brand: 1]
+      import TraceMeetWeb.UIComponents, only: [input: 1, textarea: 1, button: 1, brand: 1]
       alias Phoenix.LiveView.JS
       alias TraceMeetWeb.Layouts
       unquote(verified_routes())

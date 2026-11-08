@@ -176,7 +176,7 @@ defmodule TraceMeetWeb.Layouts do
             <span class="w-10"></span>
           </header>
 
-          <main class="mx-auto w-full max-w-[1440px] px-4 py-6 sm:px-6 sm:py-8 lg:px-10">
+          <main class="mx-auto w-full px-4 py-6 sm:px-6 sm:py-8 lg:w-[98%] lg:px-0">
             {render_slot(@inner_block)}
           </main>
         </div>

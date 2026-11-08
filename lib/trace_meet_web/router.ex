@@ -44,7 +44,10 @@ defmodule TraceMeetWeb.Router do
         {TraceMeetWeb.UserAuth, :ensure_authenticated}
       ] do
       live "/dashboard", DashboardLive, :index
-      live "/clients", PlaceholderLive, :clients
+      live "/clients", ClientLive.Index, :index
+      live "/clients/new", ClientLive.Form, :new
+      live "/clients/:id", ClientLive.Show, :show
+      live "/clients/:id/edit", ClientLive.Form, :edit
       live "/meetings", PlaceholderLive, :meetings
       live "/actions", PlaceholderLive, :actions
       live "/settings", PlaceholderLive, :settings
