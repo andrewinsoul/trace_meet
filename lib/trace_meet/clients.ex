@@ -39,6 +39,29 @@ defmodule TraceMeet.Clients do
     }
   end
 
+  def search_clients_for_selection(user_id, search) do
+    search = String.trim(search)
+
+    if String.length(search) < 2 do
+      []
+    else
+      pattern = "%#{escape_like(search)}%"
+
+      Repo.all(
+        from(c in Client,
+          where:
+            c.user_id == ^user_id and
+              is_nil(c.archived_at) and
+              (ilike(c.name, ^pattern) or
+                 ilike(coalesce(c.email, ""), ^pattern) or
+                 ilike(coalesce(c.company, ""), ^pattern)),
+          order_by: [asc: c.name],
+          limit: 20
+        )
+      )
+    end
+  end
+
   def get_client(user_id, client_id) do
     case Ecto.UUID.cast(client_id) do
       {:ok, id} ->

@@ -31,6 +31,25 @@ defmodule TraceMeet.Accounts do
     end
   end
 
+  def update_user_time_zone(%User{time_zone: time_zone} = user, time_zone)
+      when is_binary(time_zone),
+      do: {:ok, user}
+
+  def update_user_time_zone(%User{} = user, time_zone) when is_binary(time_zone) do
+    if valid_time_zone?(time_zone) do
+      user
+      |> Ecto.Changeset.change(time_zone: time_zone)
+      |> Repo.update()
+    else
+      {:error, :invalid_time_zone}
+    end
+  end
+
+  def valid_time_zone?(time_zone) do
+    time_zone == "Etc/UTC" or
+      time_zone in Tzdata.zone_list()
+  end
+
   def authenticate_user(email, password)
       when is_binary(email) and is_binary(password) do
     user = Repo.get_by(User, email: String.downcase(String.trim(email)))

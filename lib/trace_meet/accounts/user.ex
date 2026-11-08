@@ -8,6 +8,7 @@ defmodule TraceMeet.Accounts.User do
 
   schema "users" do
     field :email, :string
+    field :time_zone, :string, default: "Etc/UTC"
     field :hashed_password, :string, redact: true
     field :password, :string, virtual: true, redact: true
     field :password_confirmation, :string, virtual: true, redact: true

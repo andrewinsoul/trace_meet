@@ -145,18 +145,13 @@ defmodule TraceMeetWeb.ClientLive.Form do
       end
 
     case result do
-      {:ok, client} ->
+      {:ok, _client} ->
         message = if socket.assigns.live_action == :new, do: "Client created.", else: "Client updated."
-
-        destination =
-          if socket.assigns.live_action == :new,
-            do: ~p"/clients",
-            else: ~p"/clients/#{client.id}"
 
         {:noreply,
          socket
          |> put_flash(:info, message)
-         |> push_navigate(to: destination)}
+         |> push_navigate(to: ~p"/clients")}
 
       {:error, :not_found} ->
         {:noreply,
