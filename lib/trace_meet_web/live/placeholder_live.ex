@@ -2,13 +2,6 @@ defmodule TraceMeetWeb.PlaceholderLive do
   use TraceMeetWeb, :live_view
 
   @pages %{
-    meetings: %{
-      title: "Meetings",
-      eyebrow: "MEETING WORKSPACE",
-      description: "Review meeting transcripts and the insights extracted from them.",
-      message: "Your meetings will appear here",
-      detail: "Create a meeting for a client, add its transcript and review the resulting insights."
-    },
     actions: %{
       title: "Action items",
       eyebrow: "FOLLOW-UP TRACKING",
