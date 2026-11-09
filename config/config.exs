@@ -17,6 +17,11 @@ config :trace_meet, Oban,
   repo: TraceMeet.Repo,
   queues: [transcript_processing: 2],
   plugins: [{Oban.Plugins.Pruner, max_age: 60 * 60 * 24 * 7}]
+
+config :trace_meet,
+  ai_provider: TraceMeet.AI.MockProvider,
+  ai_model: "openai/gpt-oss-120b",
+  processing_max_attempts: 5
 config :esbuild,
   version: "0.25.4",
   trace_meet: [

@@ -2,6 +2,7 @@ defmodule TraceMeetWeb.MeetingLive.Show do
   use TraceMeetWeb, :live_view
 
   alias TraceMeet.Meetings
+  alias TraceMeet.ProcessingRuns
   alias TraceMeet.Transcripts
   alias TraceMeet.Transcripts.FileExtractor
 
@@ -15,14 +16,28 @@ defmodule TraceMeetWeb.MeetingLive.Show do
          |> push_navigate(to: ~p"/meetings")}
 
       meeting ->
+        advisor_id = socket.assigns.current_user.id
+        selected_transcript = Transcripts.get_selected_transcript(advisor_id, meeting.id)
+
+        processing_runs =
+          if selected_transcript do
+            ProcessingRuns.list_for_transcript(advisor_id, selected_transcript.id)
+          else
+            []
+          end
+
+        if connected?(socket) do
+          Phoenix.PubSub.subscribe(TraceMeet.PubSub, "advisor:#{advisor_id}:processing")
+        end
+
         {:ok,
          socket
          |> assign(
            meeting: meeting,
            page_title: meeting.title,
-           transcripts: Transcripts.list_transcripts(socket.assigns.current_user.id, meeting.id),
-           selected_transcript:
-             Transcripts.get_selected_transcript(socket.assigns.current_user.id, meeting.id)
+           transcripts: Transcripts.list_transcripts(advisor_id, meeting.id),
+           selected_transcript: selected_transcript,
+           processing_runs: processing_runs
          )
          |> allow_upload(:transcript_upload,
            accept: ~w(.txt .md .pdf .docx),
@@ -103,17 +118,49 @@ defmodule TraceMeetWeb.MeetingLive.Show do
   end
 
   def handle_event("process_transcript", _params, socket) do
+    advisor_id = socket.assigns.current_user.id
+    meeting_id = socket.assigns.meeting.id
+
     case socket.assigns.selected_transcript do
       nil ->
         {:noreply, put_flash(socket, :error, "Select a transcript version before processing.")}
 
-      _transcript ->
-        {:noreply,
-         put_flash(
-           socket,
-           :info,
-           "Transcript processing is ready to be connected. Background processing is not enabled yet."
-         )}
+      transcript ->
+        case ProcessingRuns.enqueue(advisor_id, meeting_id, transcript.id) do
+          {:ok, _run} ->
+            {:noreply,
+             socket
+             |> refresh_transcripts()
+             |> put_flash(:info, "Transcript processing has been queued.")}
+
+          {:error, :already_processing} ->
+            {:noreply,
+             socket
+             |> refresh_transcripts()
+             |> put_flash(:info, "This transcript already has an active processing run.")}
+
+          {:error, :transcript_not_selected} ->
+            {:noreply,
+             socket
+             |> refresh_transcripts()
+             |> put_flash(:error, "Select this transcript version before processing.")}
+
+          {:error, _reason} ->
+            {:noreply,
+             put_flash(
+               socket,
+               :error,
+               "We couldn't queue transcript processing. Please try again."
+             )}
+        end
+    end
+  end
+
+  @impl true
+  def handle_info({:processing_run_updated, transcript_id}, socket) do
+    case socket.assigns.selected_transcript do
+      %{id: ^transcript_id} -> {:noreply, refresh_transcripts(socket)}
+      _ -> {:noreply, socket}
     end
   end
 
@@ -138,9 +185,16 @@ defmodule TraceMeetWeb.MeetingLive.Show do
     advisor_id = socket.assigns.current_user.id
     meeting_id = socket.assigns.meeting.id
 
+    selected_transcript = Transcripts.get_selected_transcript(advisor_id, meeting_id)
+
     assign(socket,
       transcripts: Transcripts.list_transcripts(advisor_id, meeting_id),
-      selected_transcript: Transcripts.get_selected_transcript(advisor_id, meeting_id)
+      selected_transcript: selected_transcript,
+      processing_runs:
+        if(selected_transcript,
+          do: ProcessingRuns.list_for_transcript(advisor_id, selected_transcript.id),
+          else: []
+        )
     )
   end
 
@@ -315,13 +369,55 @@ defmodule TraceMeetWeb.MeetingLive.Show do
                       Prepare this transcript to identify decisions, action items, commitments, risks, blockers, and unresolved questions for your review.
                     </p>
                   </div>
-                  <button
-                    type="button"
-                    phx-click="process_transcript"
-                    class="inline-flex shrink-0 items-center justify-center rounded-lg bg-[#087C43] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#066A39]"
-                  >
-                    Process transcript
-                  </button>
+                  <%= if active_processing_run(@processing_runs) do %>
+                    <span class="inline-flex shrink-0 items-center rounded-lg bg-[#EAF5EE] px-4 py-2.5 text-sm font-semibold text-[#087C43]">
+                      {processing_status(active_processing_run(@processing_runs).status)}
+                    </span>
+                  <% else %>
+                    <button
+                      type="button"
+                      phx-click="process_transcript"
+                      phx-disable-with="Queueing..."
+                      class="inline-flex shrink-0 items-center justify-center rounded-lg bg-[#087C43] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#066A39]"
+                    >
+                      Process transcript
+                    </button>
+                  <% end %>
+                </div>
+              </div>
+            <% end %>
+
+            <%= if @selected_transcript && @selected_transcript.cleaned_content do %>
+              <div class="mt-4 rounded-xl border border-[#E5EBE6] bg-white p-4">
+                <h3 class="text-xs font-semibold uppercase tracking-wide text-[#87938A]">
+                  Cleaned transcript
+                </h3>
+                <p class="mt-1 text-xs text-[#68756C]">
+                  The original transcript remains unchanged. This cleaned version is prepared for the next analysis stage.
+                </p>
+                <pre class="mt-3 max-h-96 overflow-auto whitespace-pre-wrap text-xs leading-5 text-[#526057]">{cleaned_preview(@selected_transcript.cleaned_content)}</pre>
+              </div>
+            <% end %>
+
+            <%= if @processing_runs != [] do %>
+              <div class="mt-4 rounded-xl border border-[#E5EBE6] bg-white p-4">
+                <h3 class="text-xs font-semibold uppercase tracking-wide text-[#87938A]">
+                  Processing history
+                </h3>
+                <div class="mt-3 space-y-2">
+                  <%= for run <- @processing_runs do %>
+                    <div class="flex items-center justify-between gap-3 text-xs">
+                      <span class="text-[#526057]">
+                        Run created {Calendar.strftime(run.inserted_at, "%b %d, %Y %I:%M %p UTC")}
+                      </span>
+                      <span class="font-semibold text-[#26352B]">{processing_status(run.status)}</span>
+                    </div>
+                    <%= if run.status == "failed" and run.error_message do %>
+                      <p class="text-xs text-[#A33B32]">
+                        Processing failed. You can start a new run for this transcript.
+                      </p>
+                    <% end %>
+                  <% end %>
                 </div>
               </div>
             <% end %>
@@ -366,6 +462,24 @@ defmodule TraceMeetWeb.MeetingLive.Show do
     do: name || "Uploaded file"
 
   defp transcript_source(_transcript), do: "Pasted text"
+
+  defp cleaned_preview(content) when is_binary(content) do
+    if String.length(content) > 3_000 do
+      String.slice(content, 0, 3_000) <> "\n\n…"
+    else
+      content
+    end
+  end
+
+  defp active_processing_run(runs) do
+    Enum.find(runs, &(&1.status in ["queued", "processing"]))
+  end
+
+  defp processing_status("queued"), do: "Queued"
+  defp processing_status("processing"), do: "Processing"
+  defp processing_status("completed"), do: "Completed"
+  defp processing_status("failed"), do: "Failed"
+  defp processing_status("cancelled"), do: "Cancelled"
 
   defp upload_error(:too_large), do: "The file is larger than the 2 MB upload limit."
   defp upload_error(:not_accepted), do: "Choose a TXT, Markdown, PDF, or DOCX file."

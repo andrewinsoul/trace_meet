@@ -8,9 +8,9 @@ defmodule TraceMeet.Application do
     children = [
       TraceMeetWeb.Telemetry,
       TraceMeet.Repo,
-      {Oban, Application.fetch_env!(:trace_meet, Oban)},
       {DNSCluster, query: Application.get_env(:trace_meet, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: TraceMeet.PubSub},
+      {Oban, Application.fetch_env!(:trace_meet, Oban)},
       TraceMeetWeb.Endpoint
     ]
     opts = [strategy: :one_for_one, name: TraceMeet.Supervisor]

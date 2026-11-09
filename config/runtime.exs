@@ -7,6 +7,12 @@ config :trace_meet, TraceMeetWeb.Endpoint,
   http: [port: String.to_integer(System.get_env("PORT", "4000"))]
 
 if config_env() == :prod do
+  config :trace_meet,
+    ai_provider: TraceMeet.AI.GroqProvider,
+    ai_model: System.get_env("GROQ_MODEL", "openai/gpt-oss-120b"),
+    processing_max_attempts:
+      String.to_integer(System.get_env("TRANSCRIPT_PROCESSING_MAX_ATTEMPTS", "5"))
+
   database_url =
     System.get_env("DATABASE_URL") ||
       raise """
