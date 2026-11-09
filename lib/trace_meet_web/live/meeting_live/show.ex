@@ -2,6 +2,8 @@ defmodule TraceMeetWeb.MeetingLive.Show do
   use TraceMeetWeb, :live_view
 
   alias TraceMeet.Meetings
+  alias TraceMeet.Transcripts
+  alias TraceMeet.Transcripts.FileExtractor
 
   @impl true
   def mount(%{"id" => id}, _session, socket) do
@@ -13,7 +15,20 @@ defmodule TraceMeetWeb.MeetingLive.Show do
          |> push_navigate(to: ~p"/meetings")}
 
       meeting ->
-        {:ok, assign(socket, meeting: meeting, page_title: meeting.title)}
+        {:ok,
+         socket
+         |> assign(
+           meeting: meeting,
+           page_title: meeting.title,
+           transcripts: Transcripts.list_transcripts(socket.assigns.current_user.id, meeting.id),
+           selected_transcript:
+             Transcripts.get_selected_transcript(socket.assigns.current_user.id, meeting.id)
+         )
+         |> allow_upload(:transcript_upload,
+           accept: ~w(.txt .md .pdf .docx),
+           max_entries: 1,
+           max_file_size: 2_000_000
+         )}
     end
   end
 
@@ -35,27 +50,141 @@ defmodule TraceMeetWeb.MeetingLive.Show do
   end
 
   @impl true
+  def handle_event("save_transcript", %{"transcript" => %{"content" => content}}, socket) do
+    save_transcript(socket, %{"source_type" => "paste", "content" => content})
+  end
+
+  def handle_event("validate_transcript_upload", _params, socket), do: {:noreply, socket}
+
+  def handle_event("upload_transcript", _params, socket) do
+    case consume_uploaded_entries(socket, :transcript_upload, fn %{path: path}, entry ->
+           case FileExtractor.extract(path, entry.client_name) do
+             {:ok, content} ->
+               {:ok,
+                %{
+                  "source_type" => "file",
+                  "original_filename" => entry.client_name,
+                  "content" => content
+                }}
+
+             {:error, reason} ->
+               {:ok, {:error, reason}}
+           end
+         end) do
+      [%{} = attrs] ->
+        save_transcript(socket, attrs)
+
+      [{:error, reason}] ->
+        {:noreply, put_flash(socket, :error, upload_transcript_error(reason))}
+
+      [] ->
+        {:noreply, put_flash(socket, :error, "Choose a valid transcript file first.")}
+
+      _ ->
+        {:noreply, put_flash(socket, :error, "The transcript file could not be read.")}
+    end
+  end
+
+  def handle_event("select_transcript", %{"id" => transcript_id}, socket) do
+    case Transcripts.select_transcript(
+           socket.assigns.current_user.id,
+           socket.assigns.meeting.id,
+           transcript_id
+         ) do
+      {:ok, _transcript} ->
+        {:noreply,
+         socket
+         |> refresh_transcripts()
+         |> put_flash(:info, "Transcript version selected.")}
+
+      {:error, reason} ->
+        {:noreply, put_flash(socket, :error, transcript_error(reason))}
+    end
+  end
+
+  defp save_transcript(socket, attrs) do
+    case Transcripts.create_transcript(
+           socket.assigns.current_user.id,
+           socket.assigns.meeting.id,
+           attrs
+         ) do
+      {:ok, _transcript} ->
+        {:noreply,
+         socket
+         |> refresh_transcripts()
+         |> put_flash(:info, "Transcript saved. The new version is now selected.")}
+
+      {:error, reason} ->
+        {:noreply, put_flash(socket, :error, transcript_error(reason))}
+    end
+  end
+
+  defp refresh_transcripts(socket) do
+    advisor_id = socket.assigns.current_user.id
+    meeting_id = socket.assigns.meeting.id
+
+    assign(socket,
+      transcripts: Transcripts.list_transcripts(advisor_id, meeting_id),
+      selected_transcript: Transcripts.get_selected_transcript(advisor_id, meeting_id)
+    )
+  end
+
+  defp transcript_error(:meeting_not_completed),
+    do: "Transcripts can only be added to completed meetings."
+
+  defp transcript_error(:not_found), do: "That meeting or transcript could not be found."
+
+  defp transcript_error(_reason),
+    do: "The transcript could not be saved. Check the content and try again."
+
+  @impl true
   def render(assigns) do
     ~H"""
     <Layouts.workspace flash={@flash} current_user={@current_user} active_page={:meetings}>
       <div class="mx-auto max-w-4xl">
         <div class="mb-8">
-          <.link navigate={~p"/meetings"} class="text-sm font-medium text-[#68756C] hover:text-[#087C43]">← Back to meetings</.link>
+          <.link
+            navigate={~p"/meetings"}
+            class="text-sm font-medium text-[#68756C] hover:text-[#087C43]"
+          >
+            ← Back to meetings
+          </.link>
         </div>
 
         <section class="w-full overflow-hidden rounded-2xl border border-[#E5EBE6] bg-white shadow-sm">
           <div class="flex flex-col gap-5 border-b border-[#EEF2EF] p-5 sm:flex-row sm:items-start sm:justify-between sm:p-8">
             <div class="min-w-0">
-              <p class="text-xs font-semibold uppercase tracking-wide text-[#087C43]">MEETING RECORD</p>
-              <h1 class="mt-2 text-2xl font-semibold tracking-tight text-[#17231C]">{@meeting.title}</h1>
+              <p class="text-xs font-semibold uppercase tracking-wide text-[#087C43]">
+                MEETING RECORD
+              </p>
+              <h1 class="mt-2 text-2xl font-semibold tracking-tight text-[#17231C]">
+                {@meeting.title}
+              </h1>
               <p class="mt-2 text-sm text-[#68756C]">
                 Client:
-                <.link navigate={~p"/clients/#{@meeting.client_id}"} class="font-semibold text-[#087C43] hover:underline">{@meeting.client.name}</.link>
+                <.link
+                  navigate={~p"/clients/#{@meeting.client_id}"}
+                  class="font-semibold text-[#087C43] hover:underline"
+                >
+                  {@meeting.client.name}
+                </.link>
               </p>
             </div>
             <div class="flex flex-wrap gap-2">
-              <.link navigate={~p"/meetings/#{@meeting.id}/edit"} class="inline-flex items-center justify-center rounded-lg border border-[#DCE5DE] bg-white px-3.5 py-2 text-sm font-semibold text-[#526057] transition hover:bg-[#F5F8F5]">Edit meeting</.link>
-              <button type="button" phx-click="archive" phx-confirm="Archive this meeting? It will be removed from your active meeting list." class="inline-flex items-center justify-center rounded-lg border border-[#F0D7D4] bg-white px-3.5 py-2 text-sm font-semibold text-[#A33B32] transition hover:bg-[#FFF7F6]">Archive</button>
+              <.link
+                navigate={~p"/meetings/#{@meeting.id}/edit"}
+                class="inline-flex items-center justify-center rounded-lg border border-[#DCE5DE] bg-white px-3.5 py-2 text-sm font-semibold text-[#526057] transition hover:bg-[#F5F8F5]"
+              >
+                Edit meeting
+              </.link>
+              <button
+                type="button"
+                phx-click="archive"
+                phx-confirm="Archive this meeting? It will be removed from your active meeting list."
+                class="inline-flex items-center justify-center rounded-lg border border-[#F0D7D4] bg-white px-3.5 py-2 text-sm font-semibold text-[#A33B32] transition hover:bg-[#FFF7F6]"
+              >
+                Archive
+              </button>
             </div>
           </div>
 
@@ -65,29 +194,183 @@ defmodule TraceMeetWeb.MeetingLive.Show do
               <p class="mt-2 text-sm font-medium text-[#26352B]">{status_label(@meeting.status)}</p>
             </div>
             <div>
-              <p class="text-xs font-semibold uppercase tracking-wide text-[#87938A]">Meeting date and time</p>
+              <p class="text-xs font-semibold uppercase tracking-wide text-[#87938A]">
+                Meeting date and time
+              </p>
               <p class="mt-2 text-sm text-[#26352B]">{meeting_time(@meeting)}</p>
             </div>
             <div class="sm:col-span-2">
-              <p class="text-xs font-semibold uppercase tracking-wide text-[#87938A]">Agenda or notes</p>
-              <p class="mt-2 whitespace-pre-wrap text-sm leading-6 text-[#526057]">{description(@meeting.description)}</p>
+              <p class="text-xs font-semibold uppercase tracking-wide text-[#87938A]">
+                Agenda or notes
+              </p>
+              <p class="mt-2 whitespace-pre-wrap text-sm leading-6 text-[#526057]">
+                {description(@meeting.description)}
+              </p>
             </div>
           </div>
 
-          <div class="border-t border-[#EEF2EF] bg-[#FBFCFB] px-5 py-5 sm:px-8">
-            <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div class="border-t border-[#EEF2EF] bg-[#FBFCFB] px-5 py-6 sm:px-8">
+            <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
               <div>
-                <h2 class="text-sm font-semibold text-[#26352B]">Transcript</h2>
-                <p class="mt-1 text-xs leading-5 text-[#87938A]">You can add the transcript after creating this meeting. Transcript submission is not required to save the meeting.</p>
+                <h2 class="text-sm font-semibold text-[#26352B]">Transcript versions</h2>
+                <p class="mt-1 max-w-2xl text-xs leading-5 text-[#68756C]">
+                  Add a transcript by pasting text or uploading a TXT, Markdown, PDF, or DOCX file. Each upload creates a new version; the latest version is selected automatically and previous versions are preserved.
+                </p>
               </div>
-              <span class="inline-flex w-fit rounded-full bg-[#F1F4F1] px-3 py-1 text-xs font-medium text-[#68756C]">Not added yet</span>
+              <span class="inline-flex w-fit rounded-full bg-[#F1F4F1] px-3 py-1 text-xs font-medium text-[#68756C]">
+                {length(@transcripts)} {if length(@transcripts) == 1, do: "version", else: "versions"}
+              </span>
             </div>
+
+            <%= if @meeting.status == "completed" do %>
+              <div class="mt-6 grid gap-6 lg:grid-cols-2">
+                <.form
+                  for={%{}}
+                  as={:transcript}
+                  id="transcript-paste-form"
+                  phx-submit="save_transcript"
+                  class="space-y-3"
+                >
+                  <label for="transcript-content" class="block text-sm font-medium text-[#26352B]">
+                    Paste transcript
+                  </label>
+                  <textarea
+                    id="transcript-content"
+                    name="transcript[content]"
+                    rows="8"
+                    required
+                    maxlength="2000000"
+                    placeholder="Paste the meeting transcript here..."
+                    class="w-full rounded-xl border border-[#DCE5DE] bg-white px-3 py-3 text-sm text-[#26352B] outline-none transition placeholder:text-[#A0AAA3] focus:border-[#087C43] focus:ring-2 focus:ring-[#087C43]/10"
+                  ></textarea>
+                  <button
+                    type="submit"
+                    class="inline-flex items-center rounded-lg bg-[#087C43] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#066A39]"
+                  >
+                    Save transcript
+                  </button>
+                </.form>
+
+                <div class="space-y-3">
+                  <p class="text-sm font-medium text-[#26352B]">Upload transcript file</p>
+                  <.form
+                    for={%{}}
+                    id="transcript-upload-form"
+                    phx-submit="upload_transcript"
+                    phx-change="validate_transcript_upload"
+                    class="rounded-xl border border-dashed border-[#C9D7CC] bg-white p-4"
+                  >
+                    <.live_file_input
+                      upload={@uploads.transcript_upload}
+                      class="block w-full text-sm text-[#526057] file:mr-3 file:rounded-lg file:border-0 file:bg-[#EAF5EE] file:px-3 file:py-2 file:text-sm file:font-semibold file:text-[#087C43]"
+                    />
+                    <p class="mt-2 text-xs text-[#87938A]">
+                      TXT, Markdown, PDF, or DOCX, up to 2 MB.
+                    </p>
+                    <%= for entry <- @uploads.transcript_upload.entries do %>
+                      <p class="mt-2 truncate text-xs text-[#526057]">{entry.client_name}</p>
+                      <%= for err <- upload_errors(@uploads.transcript_upload, entry) do %>
+                        <p class="mt-1 text-xs text-red-600">{upload_error(err)}</p>
+                      <% end %>
+                    <% end %>
+                    <button
+                      type="submit"
+                      class="mt-4 inline-flex items-center rounded-lg border border-[#DCE5DE] bg-white px-4 py-2.5 text-sm font-semibold text-[#26352B] transition hover:bg-[#F5F8F5]"
+                    >
+                      Upload version
+                    </button>
+                  </.form>
+                </div>
+              </div>
+            <% else %>
+              <p class="mt-5 rounded-xl border border-[#F0E4C9] bg-[#FFFBF1] px-4 py-3 text-sm text-[#80652E]">
+                Transcript submission is available after this meeting is marked completed.
+              </p>
+            <% end %>
+
+            <%= if @selected_transcript do %>
+              <div class="mt-6 rounded-xl border border-[#BBDCC7] bg-[#F2FAF4] p-4">
+                <p class="text-xs font-semibold uppercase tracking-wide text-[#087C43]">
+                  Selected transcript · Version {@selected_transcript.version}
+                </p>
+                <p class="mt-1 text-xs text-[#526057]">{transcript_source(@selected_transcript)}</p>
+              </div>
+            <% end %>
+
+            <%= if @transcripts != [] do %>
+              <div class="mt-4 divide-y divide-[#EEF2EF] rounded-xl border border-[#E5EBE6] bg-white">
+                <%= for transcript <- @transcripts do %>
+                  <div class="flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <p class="text-sm font-medium text-[#26352B]">Version {transcript.version}</p>
+                      <p class="mt-1 text-xs text-[#87938A]">
+                        {transcript_source(transcript)} · Added {Calendar.strftime(
+                          transcript.inserted_at,
+                          "%b %d, %Y %I:%M %p UTC"
+                        )}
+                      </p>
+                    </div>
+                    <%= if is_nil(transcript.selected_at) do %>
+                      <button
+                        type="button"
+                        phx-click="select_transcript"
+                        phx-value-id={transcript.id}
+                        class="inline-flex w-fit items-center rounded-lg border border-[#DCE5DE] px-3 py-2 text-xs font-semibold text-[#526057] transition hover:bg-[#F5F8F5]"
+                      >
+                        Select version
+                      </button>
+                    <% else %>
+                      <span class="text-xs font-semibold text-[#087C43]">Currently selected</span>
+                    <% end %>
+                  </div>
+                <% end %>
+              </div>
+            <% end %>
           </div>
         </section>
       </div>
     </Layouts.workspace>
     """
   end
+
+  defp transcript_source(%{source_type: "file", original_filename: name}),
+    do: name || "Uploaded file"
+
+  defp transcript_source(_transcript), do: "Pasted text"
+
+  defp upload_error(:too_large), do: "The file is larger than the 2 MB upload limit."
+  defp upload_error(:not_accepted), do: "Choose a TXT, Markdown, PDF, or DOCX file."
+  defp upload_error(_), do: "The file could not be uploaded. Please try another file."
+
+  defp upload_transcript_error(:file_too_large),
+    do: "This file exceeds the 2 MB upload limit."
+
+  defp upload_transcript_error(:file_unreadable),
+    do: "We couldn't access this file. Please try uploading it again."
+
+  defp upload_transcript_error(:unsupported_file_type),
+    do: "This file type isn't supported. Upload a TXT, Markdown, PDF, or DOCX file."
+
+  defp upload_transcript_error(:no_extractable_text),
+    do: "We couldn't find readable text in this file. Scanned PDFs and image-only documents aren't supported yet."
+
+  defp upload_transcript_error(:extracted_text_too_large),
+    do: "The extracted transcript exceeds the 2 MB text limit. Please upload a shorter document."
+
+  defp upload_transcript_error(:docx_content_too_large),
+    do: "This Word document contains too much expanded document data to process safely."
+
+  defp upload_transcript_error(:invalid_docx),
+    do: "We couldn't read this Word document. Make sure it is a valid, unprotected DOCX file."
+
+  defp upload_transcript_error(:pdf_could_not_be_read),
+    do: "We couldn't read this PDF. It may be damaged, password-protected, or use an unsupported format."
+
+  defp upload_transcript_error(:invalid_text_encoding),
+    do: "This file contains text in an unsupported encoding. Please save it as UTF-8 and try again."
+
+  defp upload_transcript_error(_reason),
+    do: "We couldn't extract text from this file. It may be damaged or use unsupported document features."
 
   defp status_label("in_progress"), do: "In progress"
   defp status_label(status), do: status |> String.replace("_", " ") |> String.capitalize()
@@ -97,6 +380,7 @@ defmodule TraceMeetWeb.MeetingLive.Show do
 
   defp meeting_time(%{started_at: %DateTime{} = value} = meeting),
     do: format_meeting_time(value, meeting.time_zone)
+
   defp meeting_time(_meeting), do: "Not provided"
 
   defp format_meeting_time(value, time_zone) do
