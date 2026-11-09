@@ -13,6 +13,10 @@ config :trace_meet, TraceMeetWeb.Endpoint,
   pubsub_server: TraceMeet.PubSub,
   live_view: [signing_salt: "iAJaJeai"]
 config :trace_meet, TraceMeet.Mailer, adapter: Swoosh.Adapters.Local
+config :trace_meet, Oban,
+  repo: TraceMeet.Repo,
+  queues: [transcript_processing: 2],
+  plugins: [{Oban.Plugins.Pruner, max_age: 60 * 60 * 24 * 7}]
 config :esbuild,
   version: "0.25.4",
   trace_meet: [
