@@ -102,6 +102,21 @@ defmodule TraceMeetWeb.MeetingLive.Show do
     end
   end
 
+  def handle_event("process_transcript", _params, socket) do
+    case socket.assigns.selected_transcript do
+      nil ->
+        {:noreply, put_flash(socket, :error, "Select a transcript version before processing.")}
+
+      _transcript ->
+        {:noreply,
+         put_flash(
+           socket,
+           :info,
+           "Transcript processing is ready to be connected. Background processing is not enabled yet."
+         )}
+    end
+  end
+
   defp save_transcript(socket, attrs) do
     case Transcripts.create_transcript(
            socket.assigns.current_user.id,
@@ -290,10 +305,24 @@ defmodule TraceMeetWeb.MeetingLive.Show do
 
             <%= if @selected_transcript do %>
               <div class="mt-6 rounded-xl border border-[#BBDCC7] bg-[#F2FAF4] p-4">
-                <p class="text-xs font-semibold uppercase tracking-wide text-[#087C43]">
-                  Selected transcript · Version {@selected_transcript.version}
-                </p>
-                <p class="mt-1 text-xs text-[#526057]">{transcript_source(@selected_transcript)}</p>
+                <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div class="min-w-0">
+                    <p class="text-xs font-semibold uppercase tracking-wide text-[#087C43]">
+                      Selected transcript · Version {@selected_transcript.version}
+                    </p>
+                    <p class="mt-1 text-xs text-[#526057]">{transcript_source(@selected_transcript)}</p>
+                    <p class="mt-2 max-w-2xl text-xs leading-5 text-[#526057]">
+                      Prepare this transcript to identify decisions, action items, commitments, risks, blockers, and unresolved questions for your review.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    phx-click="process_transcript"
+                    class="inline-flex shrink-0 items-center justify-center rounded-lg bg-[#087C43] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#066A39]"
+                  >
+                    Process transcript
+                  </button>
+                </div>
               </div>
             <% end %>
 
