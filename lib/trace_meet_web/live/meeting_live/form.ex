@@ -32,6 +32,7 @@ defmodule TraceMeetWeb.MeetingLive.Form do
              client_search: "",
              client_results: [],
              client_selector_open: is_nil(selected_client),
+             meeting_types: TraceMeet.Meetings.Types.all(),
              page_title: "Add meeting"
            )}
         end
@@ -50,6 +51,7 @@ defmodule TraceMeetWeb.MeetingLive.Form do
                client_search: "",
                client_results: [],
                client_selector_open: false,
+               meeting_types: TraceMeet.Meetings.Types.all(),
                page_title: "Edit meeting"
              )}
 
@@ -211,6 +213,16 @@ defmodule TraceMeetWeb.MeetingLive.Form do
             </div>
             <.input field={@form[:title]} label="Meeting title" placeholder="e.g. Quarterly business review" required />
             <.textarea field={@form[:description]} label="Agenda or notes" placeholder="What will you discuss? Add context if the meeting has already happened." rows={4} />
+            <div>
+              <label for="meeting-type" class="mb-1.5 block text-sm font-medium text-[#26352B]">Meeting type</label>
+              <select id="meeting-type" name="meeting[meeting_type]" phx-change="validate" class="block w-full rounded-lg border border-[#DCE5DE] bg-white px-3.5 py-3 text-sm text-[#17231C] outline-none focus:border-[#087C43] focus:ring-4 focus:ring-[#087C43]/10">
+                <option :for={{label, value} <- @meeting_types} value={value} selected={@form[:meeting_type].value == value}>{label}</option>
+              </select>
+              <div :if={@form[:meeting_type].value == "other"} class="mt-3">
+                <label class="mb-1.5 block text-sm font-medium text-[#26352B]">Specify meeting type</label>
+                <.input field={@form[:other_meeting_type]} placeholder="e.g. Regulatory compliance" />
+              </div>
+            </div>
             <div class="grid gap-5 sm:grid-cols-2">
               <.input field={@form[:meeting_at]} type="datetime-local" label="Meeting date and time" />
               <div class="space-y-1.5">

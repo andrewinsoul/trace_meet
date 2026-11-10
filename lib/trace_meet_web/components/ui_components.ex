@@ -92,6 +92,7 @@ defmodule TraceMeetWeb.UIComponents do
   attr :label, :string, default: nil
   attr :placeholder, :string, default: nil
   attr :rows, :integer, default: 4
+  attr :required, :boolean, default: false
   attr :class, :any, default: nil
   attr :rest, :global
 
@@ -107,6 +108,7 @@ defmodule TraceMeetWeb.UIComponents do
       <textarea
         id={@field.id}
         name={@field.name}
+        required={@required}
         rows={@rows}
         placeholder={@placeholder}
         aria-invalid={@errors != []}

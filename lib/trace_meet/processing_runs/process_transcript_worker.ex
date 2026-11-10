@@ -27,8 +27,13 @@ defmodule TraceMeet.ProcessingRuns.ProcessTranscriptWorker do
         with {:ok, run} <- ProcessingRuns.mark_processing(run, job.attempt),
              :ok <- broadcast_update(run),
              %Transcript{} = transcript <- get_transcript(advisor_id, transcript_id),
-             {:ok, cleaned} <- AI.clean_transcript(transcript.content),
-             :ok <- persist_result(run, transcript, cleaned) do
+             {:ok, cleaned} <-
+               AI.clean_transcript(transcript.content, %{
+                 version: run.prompt_version,
+                 content: run.prompt_snapshot,
+                 sha256: run.prompt_sha256
+               }, run.model),
+             :ok <- persist_result(run, cleaned) do
           :ok
         else
           nil ->
@@ -60,22 +65,17 @@ defmodule TraceMeet.ProcessingRuns.ProcessTranscriptWorker do
     )
   end
 
-  defp persist_result(run, transcript, cleaned) do
-    transcript_changeset =
-      Ecto.Changeset.change(transcript,
-        cleaned_content: cleaned.cleaned_content,
-        cleaned_segments: %{"segments" => cleaned.segments}
-      )
-
+  defp persist_result(run, cleaned) do
     Ecto.Multi.new()
-    |> Ecto.Multi.update(:transcript, transcript_changeset)
     |> Ecto.Multi.run(:processing_run, fn repo, _changes ->
       run
       |> ProcessingRun.transition_changeset(%{
         status: "completed",
         completed_at: DateTime.utc_now(),
         failed_at: nil,
-        error_message: nil
+        error_message: nil,
+        cleaned_content: cleaned.cleaned_content,
+        cleaned_segments: %{"segments" => cleaned.segments}
       })
       |> repo.update()
     end)

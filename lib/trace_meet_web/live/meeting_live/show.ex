@@ -37,7 +37,8 @@ defmodule TraceMeetWeb.MeetingLive.Show do
            page_title: meeting.title,
            transcripts: Transcripts.list_transcripts(advisor_id, meeting.id),
            selected_transcript: selected_transcript,
-           processing_runs: processing_runs
+           processing_runs: processing_runs,
+           show_default_prompt_modal: false
          )
          |> allow_upload(:transcript_upload,
            accept: ~w(.txt .md .pdf .docx),
@@ -117,6 +118,14 @@ defmodule TraceMeetWeb.MeetingLive.Show do
     end
   end
 
+  def handle_event("close_default_prompt_modal", _params, socket) do
+    {:noreply, assign(socket, :show_default_prompt_modal, false)}
+  end
+
+  def handle_event("create_default_prompt", _params, socket) do
+    {:noreply, push_navigate(socket, to: ~p"/ai-configuration?new=true")}
+  end
+
   def handle_event("process_transcript", _params, socket) do
     advisor_id = socket.assigns.current_user.id
     meeting_id = socket.assigns.meeting.id
@@ -132,6 +141,9 @@ defmodule TraceMeetWeb.MeetingLive.Show do
              socket
              |> refresh_transcripts()
              |> put_flash(:info, "Transcript processing has been queued.")}
+
+          {:error, :default_prompt_required} ->
+            {:noreply, assign(socket, :show_default_prompt_modal, true)}
 
           {:error, :already_processing} ->
             {:noreply,
@@ -159,9 +171,36 @@ defmodule TraceMeetWeb.MeetingLive.Show do
   @impl true
   def handle_info({:processing_run_updated, transcript_id}, socket) do
     case socket.assigns.selected_transcript do
-      %{id: ^transcript_id} -> {:noreply, refresh_transcripts(socket)}
-      _ -> {:noreply, socket}
+      %{id: ^transcript_id} ->
+        previous_runs = socket.assigns.processing_runs
+        socket = refresh_transcripts(socket)
+
+        case completed_status_change(previous_runs, socket.assigns.processing_runs) do
+          :completed ->
+            {:noreply, put_flash(socket, :info, "Transcript processing completed successfully.")}
+
+          :failed ->
+            {:noreply, put_flash(socket, :error, "Transcript processing failed. You can start a new run.")}
+
+          _ ->
+            {:noreply, socket}
+        end
+
+      _ ->
+        {:noreply, socket}
     end
+  end
+
+  defp completed_status_change(previous_runs, current_runs) do
+    Enum.find_value(current_runs, fn current ->
+      previous = Enum.find(previous_runs, &(&1.id == current.id))
+
+      case {previous && previous.status, current.status} do
+        {status, "completed"} when status in ["queued", "processing"] -> :completed
+        {status, "failed"} when status in ["queued", "processing"] -> :failed
+        _ -> nil
+      end
+    end)
   end
 
   defp save_transcript(socket, attrs) do
@@ -281,7 +320,7 @@ defmodule TraceMeetWeb.MeetingLive.Show do
           <div class="border-t border-[#EEF2EF] bg-[#FBFCFB] px-5 py-6 sm:px-8">
             <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
               <div>
-                <h2 class="text-sm font-semibold text-[#26352B]">Transcript versions</h2>
+                <h2 class="text-sm font-semibold text-[#26352B]">Transcripts</h2>
                 <p class="mt-1 max-w-2xl text-xs leading-5 text-[#68756C]">
                   Add a transcript by pasting text or uploading a TXT, Markdown, PDF, or DOCX file. Each upload creates a new version; the latest version is selected automatically and previous versions are preserved.
                 </p>
@@ -292,7 +331,15 @@ defmodule TraceMeetWeb.MeetingLive.Show do
             </div>
 
             <%= if @meeting.status == "completed" do %>
-              <div class="mt-6 grid gap-6 lg:grid-cols-2">
+              <details class="mt-5 rounded-xl border border-[#E5EBE6] bg-white">
+                <summary class="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 text-sm font-semibold text-[#26352B] marker:hidden">
+                  <span>Add transcript</span>
+                  <span class="flex items-center gap-2 text-xs font-medium text-[#87938A]">
+                    Paste or upload <span aria-hidden="true">⌄</span>
+                  </span>
+                </summary>
+                <div class="border-t border-[#EEF2EF] p-4">
+                  <div class="grid gap-6 lg:grid-cols-2">
                 <.form
                   for={%{}}
                   as={:transcript}
@@ -350,7 +397,9 @@ defmodule TraceMeetWeb.MeetingLive.Show do
                     </button>
                   </.form>
                 </div>
-              </div>
+                  </div>
+                </div>
+              </details>
             <% else %>
               <p class="mt-5 rounded-xl border border-[#F0E4C9] bg-[#FFFBF1] px-4 py-3 text-sm text-[#80652E]">
                 Transcript submission is available after this meeting is marked completed.
@@ -387,24 +436,32 @@ defmodule TraceMeetWeb.MeetingLive.Show do
               </div>
             <% end %>
 
-            <%= if @selected_transcript && @selected_transcript.cleaned_content do %>
-              <div class="mt-4 rounded-xl border border-[#E5EBE6] bg-white p-4">
-                <h3 class="text-xs font-semibold uppercase tracking-wide text-[#87938A]">
-                  Cleaned transcript
-                </h3>
-                <p class="mt-1 text-xs text-[#68756C]">
-                  The original transcript remains unchanged. This cleaned version is prepared for the next analysis stage.
-                </p>
-                <pre class="mt-3 max-h-96 overflow-auto whitespace-pre-wrap text-xs leading-5 text-[#526057]">{cleaned_preview(@selected_transcript.cleaned_content)}</pre>
-              </div>
+            <%= if latest_completed_run(@processing_runs) do %>
+              <details class="mt-4 rounded-xl border border-[#E5EBE6] bg-white">
+                <summary class="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 text-sm font-semibold text-[#26352B] marker:hidden">
+                  <span>Cleaned transcript</span>
+                  <span class="flex items-center gap-2 text-xs font-medium text-[#87938A]">
+                    Latest completed run <span aria-hidden="true">⌄</span>
+                  </span>
+                </summary>
+                <div class="border-t border-[#EEF2EF] p-4">
+                  <p class="text-xs text-[#68756C]">
+                    This output belongs to its processing run. Earlier runs and their outputs remain available in processing history.
+                  </p>
+                  <pre class="mt-3 max-h-96 overflow-auto whitespace-pre-wrap text-xs leading-5 text-[#526057]">{cleaned_preview(latest_completed_run(@processing_runs).cleaned_content)}</pre>
+                </div>
+              </details>
             <% end %>
 
             <%= if @processing_runs != [] do %>
-              <div class="mt-4 rounded-xl border border-[#E5EBE6] bg-white p-4">
-                <h3 class="text-xs font-semibold uppercase tracking-wide text-[#87938A]">
-                  Processing history
-                </h3>
-                <div class="mt-3 space-y-2">
+              <details class="mt-4 rounded-xl border border-[#E5EBE6] bg-white">
+                <summary class="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 text-sm font-semibold text-[#26352B] marker:hidden">
+                  <span>Processing history ({length(@processing_runs)})</span>
+                  <span class="flex items-center gap-2 text-xs font-medium text-[#87938A]">
+                    Prompt and model details <span aria-hidden="true">⌄</span>
+                  </span>
+                </summary>
+                <div class="space-y-3 border-t border-[#EEF2EF] p-4">
                   <%= for run <- @processing_runs do %>
                     <div class="flex items-center justify-between gap-3 text-xs">
                       <span class="text-[#526057]">
@@ -412,6 +469,9 @@ defmodule TraceMeetWeb.MeetingLive.Show do
                       </span>
                       <span class="font-semibold text-[#26352B]">{processing_status(run.status)}</span>
                     </div>
+                    <p class="text-[11px] text-[#87938A]">
+                      Prompt {run.prompt_version} · Model {run.model}
+                    </p>
                     <%= if run.status == "failed" and run.error_message do %>
                       <p class="text-xs text-[#A33B32]">
                         Processing failed. You can start a new run for this transcript.
@@ -419,11 +479,18 @@ defmodule TraceMeetWeb.MeetingLive.Show do
                     <% end %>
                   <% end %>
                 </div>
-              </div>
+              </details>
             <% end %>
 
             <%= if @transcripts != [] do %>
-              <div class="mt-4 divide-y divide-[#EEF2EF] rounded-xl border border-[#E5EBE6] bg-white">
+              <details class="mt-4 rounded-xl border border-[#E5EBE6] bg-white">
+                <summary class="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 text-sm font-semibold text-[#26352B] marker:hidden">
+                  <span>Transcript versions ({length(@transcripts)})</span>
+                  <span class="flex items-center gap-2 text-xs font-medium text-[#87938A]">
+                    Select another version <span aria-hidden="true">⌄</span>
+                  </span>
+                </summary>
+                <div class="divide-y divide-[#EEF2EF] border-t border-[#EEF2EF]">
                 <%= for transcript <- @transcripts do %>
                   <div class="flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
                     <div>
@@ -449,8 +516,48 @@ defmodule TraceMeetWeb.MeetingLive.Show do
                     <% end %>
                   </div>
                 <% end %>
-              </div>
+                </div>
+              </details>
             <% end %>
+          </div>
+        </section>
+      </div>
+      <div
+        :if={@show_default_prompt_modal}
+        class="fixed inset-0 z-50 flex items-center justify-center bg-[#17231C]/50 p-4"
+        phx-window-keydown="close_default_prompt_modal"
+        phx-key="escape"
+      >
+        <section
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="default-prompt-title"
+          class="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl"
+        >
+          <div class="flex h-11 w-11 items-center justify-center rounded-full bg-[#EAF5EE] text-[#087C43]">
+            <span aria-hidden="true">✦</span>
+          </div>
+          <h2 id="default-prompt-title" class="mt-4 text-lg font-semibold text-[#26352B]">
+            No default prompt configuration
+          </h2>
+          <p class="mt-2 text-sm leading-6 text-[#68756C]">
+            You haven't configured a default AI prompt yet. TraceMeet needs one to tailor transcript analysis to your advisory practice.
+          </p>
+          <div class="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            <button
+              type="button"
+              phx-click="close_default_prompt_modal"
+              class="rounded-lg border border-[#DCE5DE] px-4 py-2.5 text-sm font-semibold text-[#526057]"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              phx-click="create_default_prompt"
+              class="rounded-lg bg-[#087C43] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#066A39]"
+            >
+              Create prompt configuration
+            </button>
           </div>
         </section>
       </div>
@@ -473,6 +580,10 @@ defmodule TraceMeetWeb.MeetingLive.Show do
 
   defp active_processing_run(runs) do
     Enum.find(runs, &(&1.status in ["queued", "processing"]))
+  end
+
+  defp latest_completed_run(runs) do
+    Enum.find(runs, &(&1.status == "completed" and is_binary(&1.cleaned_content)))
   end
 
   defp processing_status("queued"), do: "Queued"

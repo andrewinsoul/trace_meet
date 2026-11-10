@@ -9,6 +9,37 @@ defmodule TraceMeet.ProcessingRuns do
   alias TraceMeet.Transcripts.Transcript
 
   def enqueue(advisor_id, meeting_id, transcript_id) do
+    prompt = TraceMeet.AI.Prompts.TranscriptCleaner.snapshot()
+    advisor_prompt = TraceMeet.AI.Configuration.active_prompt_snapshot(advisor_id)
+
+    if is_nil(advisor_prompt) do
+      {:error, :default_prompt_required}
+    else
+      enqueue_with_configuration(advisor_id, meeting_id, transcript_id, prompt, advisor_prompt)
+    end
+  end
+
+  defp enqueue_with_configuration(advisor_id, meeting_id, transcript_id, prompt, advisor_prompt) do
+    meeting_type =
+      Repo.one(
+        from(m in Meeting,
+          where: m.id == ^meeting_id and m.user_id == ^advisor_id,
+          select: m.meeting_type
+        )
+      )
+
+    guardrails = TraceMeet.AI.Configuration.guardrails_snapshot(meeting_type)
+
+    resolved_prompt =
+      [
+        prompt.content,
+        "PLATFORM GUARDRAILS:\n" <> Enum.map_join(guardrails, "\n", &("- " <> &1.instruction)),
+        "ADVISOR INSTRUCTIONS:\n" <> advisor_prompt.instructions
+      ]
+      |> Enum.join("\n\n")
+
+    model = Application.get_env(:trace_meet, :ai_model, "openai/gpt-oss-120b")
+
     Multi.new()
     |> Multi.run(:transcript, fn repo, _changes ->
       transcript =
@@ -35,7 +66,16 @@ defmodule TraceMeet.ProcessingRuns do
         transcript_id: transcript.id,
         advisor_id: advisor_id,
         status: "queued",
-        attempt_count: 0
+        attempt_count: 0,
+        prompt_version: prompt.version,
+        prompt_snapshot: resolved_prompt,
+        prompt_sha256: (:crypto.hash(:sha256, resolved_prompt) |> Base.encode16(case: :lower)),
+        model: model,
+        guardrails_snapshot: %{"guardrails" => guardrails},
+        advisor_prompt_id: advisor_prompt.id,
+        advisor_prompt_version: advisor_prompt.version,
+        advisor_prompt_snapshot: advisor_prompt.instructions,
+        advisor_prompt_sha256: advisor_prompt.sha256
       })
     end)
     |> Oban.insert(:processing_job, fn %{processing_run: run} ->

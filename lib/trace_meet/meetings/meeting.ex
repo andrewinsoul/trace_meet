@@ -12,6 +12,8 @@ defmodule TraceMeet.Meetings.Meeting do
 
   schema "meetings" do
     field :title, :string
+    field :meeting_type, :string, default: "general_consultation"
+    field :other_meeting_type, :string
     field :description, :string
     field :scheduled_at, :utc_datetime_usec
     field :started_at, :utc_datetime_usec
@@ -51,9 +53,11 @@ defmodule TraceMeet.Meetings.Meeting do
 
     changeset =
       meeting
-      |> cast(attrs, [:title, :description, :status, :meeting_at, :time_zone])
+      |> cast(attrs, [:title, :description, :status, :meeting_at, :time_zone, :meeting_type, :other_meeting_type])
       |> update_change(:title, &String.trim/1)
-      |> validate_required([:title, :status, :time_zone])
+      |> validate_required([:title, :status, :time_zone, :meeting_type])
+      |> validate_inclusion(:meeting_type, TraceMeet.Meetings.Types.values())
+      |> validate_other_meeting_type()
       |> validate_inclusion(:status, @statuses)
       |> validate_length(:title, max: 180)
       |> validate_length(:description, max: 5_000)
@@ -63,6 +67,16 @@ defmodule TraceMeet.Meetings.Meeting do
       |> validate_status_against_current_time()
 
     changeset
+  end
+
+  defp validate_other_meeting_type(changeset) do
+    if get_field(changeset, :meeting_type) == "other" do
+      changeset
+      |> validate_required([:other_meeting_type])
+      |> validate_length(:other_meeting_type, max: 100)
+    else
+      put_change(changeset, :other_meeting_type, nil)
+    end
   end
 
   defp validate_time_zone(changeset) do

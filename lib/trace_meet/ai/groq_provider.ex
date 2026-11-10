@@ -1,29 +1,12 @@
 defmodule TraceMeet.AI.GroqProvider do
   @endpoint "https://api.groq.com/openai/v1/chat/completions"
 
-  @system_prompt """
-  You are a transcript editor preparing a faithful source document for later business-outcome extraction.
 
-  Clean the transcript without summarizing the meeting or changing its meaning.
-  Remove greetings, filler words, irrelevant tangents, and unnecessary repetition.
-  Preserve context, historical positions, superseded and current decisions, disagreements,
-  exact commitments, owners, deadlines, blockers, unresolved questions, and the distinction
-  between suggestions and accepted commitments.
 
-  Do not invent facts, names, speakers, timestamps, owners, deadlines, decisions, or commitments.
-  A blocker may be classified from the meaning of a statement, but preserve the underlying statement.
-  Preserve uncertainty and conditional language. Do not turn "might", "could", or "should" into
-  a firm commitment. If a detail is unclear, retain the ambiguity rather than guessing.
-
-  Return the cleaned transcript in its original language. Divide it into coherent segments.
-  Each segment must include a verbatim source_quote copied from the supplied transcript and the
-  corresponding cleaned_text. Do not create source quotes that do not appear verbatim in the input.
-  """
-
-  def clean_transcript(content) when is_binary(content) do
+  def clean_transcript(content, system_prompt, model)
+      when is_binary(content) and is_binary(system_prompt) and is_binary(model) do
     with {:ok, api_key} <- api_key(),
-         {:ok, model} <- model(),
-         {:ok, response} <- request(api_key, model, content),
+         {:ok, response} <- request(api_key, model, content, system_prompt),
          {:ok, result} <- decode_response(response),
          {:ok, result} <- validate_result(result, content) do
       {:ok, result}
@@ -37,14 +20,7 @@ defmodule TraceMeet.AI.GroqProvider do
     end
   end
 
-  defp model do
-    case Application.get_env(:trace_meet, :ai_model) do
-      value when is_binary(value) and value != "" -> {:ok, value}
-      _ -> {:error, :missing_ai_model}
-    end
-  end
-
-  defp request(api_key, model, content) do
+  defp request(api_key, model, content, system_prompt) do
     schema = %{
       type: "object",
       properties: %{
@@ -69,7 +45,7 @@ defmodule TraceMeet.AI.GroqProvider do
     body = %{
       model: model,
       messages: [
-        %{role: "system", content: @system_prompt},
+        %{role: "system", content: system_prompt},
         %{role: "user", content: "Clean this transcript:\n\n" <> content}
       ],
       response_format: %{

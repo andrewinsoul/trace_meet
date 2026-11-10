@@ -1,13 +1,13 @@
 defmodule TraceMeet.AI.MockProvider do
-  def clean_transcript(content) when is_binary(content) do
-    Process.sleep(Enum.random(120_000..240_000))
+  def clean_transcript(content, _system_prompt, _model) when is_binary(content) do
+    Process.sleep(Enum.random(10_000..60_000))
 
     cleaned_content =
       content
-      |> String.split("\n")
+      |> String.split("\\n")
       |> Enum.map(&String.trim/1)
       |> Enum.reject(&(&1 == ""))
-      |> Enum.join("\n")
+      |> Enum.join("\\n")
 
     {:ok,
      %{

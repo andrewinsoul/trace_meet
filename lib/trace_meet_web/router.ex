@@ -53,6 +53,7 @@ defmodule TraceMeetWeb.Router do
       live "/meetings/:id", MeetingLive.Show, :show
       live "/meetings/:id/edit", MeetingLive.Form, :edit
       live "/clients/:client_id/meetings/new", MeetingLive.Form, :new
+      live "/ai-configuration", AIConfigurationLive.Index, :index
       live "/actions", PlaceholderLive, :actions
       live "/settings", PlaceholderLive, :settings
     end
