@@ -4,6 +4,8 @@ defmodule TraceMeet.ProcessingRuns.ProcessingRun do
 
   alias TraceMeet.Accounts.User
   alias TraceMeet.Transcripts.Transcript
+  alias TraceMeet.ProcessingRuns.ProcessingRunChunk
+  alias TraceMeet.Extractions.ExtractionProposal
 
   @primary_key {:id, :binary_id, autogenerate: true}
   @foreign_key_type :binary_id
@@ -28,6 +30,9 @@ defmodule TraceMeet.ProcessingRuns.ProcessingRun do
     belongs_to :advisor_prompt, TraceMeet.AI.AdvisorPrompt
     field :cleaned_content, :string
     field :cleaned_segments, :map
+
+    has_many :chunks, ProcessingRunChunk
+    has_many :extraction_proposals, ExtractionProposal
 
     belongs_to :transcript, Transcript
     belongs_to :advisor, User

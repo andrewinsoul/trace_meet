@@ -311,7 +311,7 @@ defmodule TraceMeetWeb.MeetingLive.Show do
               <p class="text-xs font-semibold uppercase tracking-wide text-[#87938A]">
                 Agenda or notes
               </p>
-              <p class="mt-2 whitespace-pre-wrap text-sm leading-6 text-[#526057]">
+              <p class="mt-2 text-sm leading-6 text-[#526057]">
                 {description(@meeting.description)}
               </p>
             </div>
@@ -331,13 +331,7 @@ defmodule TraceMeetWeb.MeetingLive.Show do
             </div>
 
             <%= if @meeting.status == "completed" do %>
-              <details class="mt-5 rounded-xl border border-[#E5EBE6] bg-white">
-                <summary class="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 text-sm font-semibold text-[#26352B] marker:hidden">
-                  <span>Add transcript</span>
-                  <span class="flex items-center gap-2 text-xs font-medium text-[#87938A]">
-                    Paste or upload <span aria-hidden="true">⌄</span>
-                  </span>
-                </summary>
+              <section class="mt-5 rounded-xl border border-[#E5EBE6] bg-white">
                 <div class="border-t border-[#EEF2EF] p-4">
                   <div class="grid gap-6 lg:grid-cols-2">
                 <.form
@@ -399,7 +393,7 @@ defmodule TraceMeetWeb.MeetingLive.Show do
                 </div>
                   </div>
                 </div>
-              </details>
+              </section>
             <% else %>
               <p class="mt-5 rounded-xl border border-[#F0E4C9] bg-[#FFFBF1] px-4 py-3 text-sm text-[#80652E]">
                 Transcript submission is available after this meeting is marked completed.
