@@ -81,7 +81,7 @@ defmodule TraceMeetWeb.AIConfigurationLive.Index do
          |> put_flash(:info, message)}
 
       {:error, %Ecto.Changeset{} = changeset} ->
-        {:noreply, assign(socket, form: to_form(attrs, as: :prompt, errors: changeset.errors))}
+        {:noreply, assign(socket, form: to_form(%{changeset | action: :insert}, as: :prompt))}
 
       {:error, _reason} ->
         {:noreply, put_flash(socket, :error, "The prompt configuration could not be saved.")}
@@ -220,7 +220,7 @@ defmodule TraceMeetWeb.AIConfigurationLive.Index do
                 <label class="mb-1.5 block text-sm font-medium text-[#26352B]">
                   Configuration name
                 </label>
-                <.input field={@form[:name]} placeholder="e.g. Business strategy" />
+                <.input field={@form[:name]} required placeholder="e.g. Business strategy" />
               </div>
               <div>
                 <label
@@ -232,6 +232,7 @@ defmodule TraceMeetWeb.AIConfigurationLive.Index do
                 <select
                   id="prompt-meeting-type"
                   name="prompt[meeting_type]"
+                  required
                   phx-change="meeting_type_changed"
                   class="block w-full rounded-lg border border-[#DCE5DE] bg-white px-3.5 py-3 text-sm text-[#17231C] outline-none focus:border-[#087C43] focus:ring-4 focus:ring-[#087C43]/10"
                 >
@@ -247,7 +248,7 @@ defmodule TraceMeetWeb.AIConfigurationLive.Index do
                   <label class="mb-1.5 block text-sm font-medium text-[#26352B]">
                     Specify meeting type
                   </label>
-                  <.input field={@form[:other_meeting_type]} placeholder="e.g. Regulatory compliance" />
+                  <.input field={@form[:other_meeting_type]} required placeholder="e.g. Regulatory compliance" />
                 </div>
               </div>
               <div>
