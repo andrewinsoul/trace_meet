@@ -37,7 +37,7 @@ defmodule TraceMeet.ProcessingRuns do
       ]
       |> Enum.join("\n\n")
 
-    prompt_version = "advisor-prompt-v#{advisor_prompt.version}"
+    prompt_version = "advisor-prompt"
 
     model = Application.get_env(:trace_meet, :ai_model, "openai/gpt-oss-120b")
 
@@ -63,21 +63,24 @@ defmodule TraceMeet.ProcessingRuns do
       end
     end)
     |> Multi.insert(:processing_run, fn %{transcript: transcript} ->
-      ProcessingRun.changeset(%ProcessingRun{}, %{
-        transcript_id: transcript.id,
-        advisor_id: advisor_id,
-        status: "queued",
-        attempt_count: 0,
-        prompt_version: prompt_version,
-        prompt_snapshot: resolved_prompt,
-        prompt_sha256: (:crypto.hash(:sha256, resolved_prompt) |> Base.encode16(case: :lower)),
-        model: model,
-        guardrails_snapshot: %{"guardrails" => guardrails},
-        advisor_prompt_id: advisor_prompt.id,
-        advisor_prompt_version: advisor_prompt.version,
-        advisor_prompt_snapshot: advisor_prompt.instructions,
-        advisor_prompt_sha256: advisor_prompt.sha256
-      })
+      ProcessingRun.changeset(
+        %ProcessingRun{
+          transcript_id: transcript.id,
+          advisor_id: advisor_id,
+          advisor_prompt_id: advisor_prompt.id
+        },
+        %{
+          status: "queued",
+          attempt_count: 0,
+          prompt_version: prompt_version,
+          prompt_snapshot: resolved_prompt,
+          prompt_sha256: (:crypto.hash(:sha256, resolved_prompt) |> Base.encode16(case: :lower)),
+          model: model,
+          guardrails_snapshot: %{"guardrails" => guardrails},
+          advisor_prompt_snapshot: advisor_prompt.instructions,
+          advisor_prompt_sha256: advisor_prompt.sha256
+        }
+      )
     end)
     |> Oban.insert(:processing_job, fn %{processing_run: run} ->
       ProcessTranscriptWorker.new(

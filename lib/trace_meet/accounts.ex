@@ -81,11 +81,10 @@ defmodule TraceMeet.Accounts do
 
         token = :crypto.strong_rand_bytes(32)
 
-        %UserToken{}
+        %UserToken{user_id: user.id}
         |> UserToken.changeset(%{
           token: :crypto.hash(:sha256, token),
-          context: "session",
-          user_id: user.id
+          context: "session"
         })
         |> Repo.insert!()
 

@@ -23,7 +23,6 @@ defmodule TraceMeet.ProcessingRuns.ProcessingRun do
     field :prompt_sha256, :string
     field :model, :string
     field :guardrails_snapshot, :map, default: %{}
-    field :advisor_prompt_version, :integer
     field :advisor_prompt_snapshot, :string, default: ""
     field :advisor_prompt_sha256, :string
     belongs_to :advisor_prompt, TraceMeet.AI.AdvisorPrompt
@@ -39,8 +38,6 @@ defmodule TraceMeet.ProcessingRuns.ProcessingRun do
   def changeset(run, attrs) do
     run
     |> cast(attrs, [
-      :transcript_id,
-      :advisor_id,
       :status,
       :oban_job_id,
       :attempt_count,
@@ -53,14 +50,10 @@ defmodule TraceMeet.ProcessingRuns.ProcessingRun do
       :prompt_sha256,
       :model,
       :guardrails_snapshot,
-      :advisor_prompt_id,
-      :advisor_prompt_version,
       :advisor_prompt_snapshot,
       :advisor_prompt_sha256
     ])
     |> validate_required([
-      :transcript_id,
-      :advisor_id,
       :status,
       :attempt_count,
       :prompt_version,
@@ -68,8 +61,6 @@ defmodule TraceMeet.ProcessingRuns.ProcessingRun do
       :prompt_sha256,
       :model,
       :guardrails_snapshot,
-      :advisor_prompt_id,
-      :advisor_prompt_version,
       :advisor_prompt_snapshot,
       :advisor_prompt_sha256
     ])

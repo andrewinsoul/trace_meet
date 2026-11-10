@@ -48,12 +48,10 @@ defmodule TraceMeetWeb.AIConfigurationLive.Index do
         {:noreply, put_flash(socket, :error, "Prompt configuration not found.")}
 
       prompt ->
-        version = Enum.find(prompt.versions, &(&1.version == prompt.active_version))
-
         {:noreply,
          assign(socket,
            viewing: if(socket.assigns.viewing == id, do: nil, else: id),
-           viewed_instructions: version && version.instructions
+           viewed_instructions: prompt.instructions
          )}
     end
   end
@@ -171,7 +169,7 @@ defmodule TraceMeetWeb.AIConfigurationLive.Index do
                                                                              do:
                                                                                " · " <>
                                                                                  prompt.other_meeting_type,
-                                                                             else: ""} · Version {prompt.active_version}
+                                                                             else: ""}
                   </p>
                 </div>
                 <div class="flex gap-2">
@@ -193,11 +191,6 @@ defmodule TraceMeetWeb.AIConfigurationLive.Index do
                     Make default
                   </button>
                 </div>
-              </div>
-              <div class="mt-3 space-y-1">
-                <p :for={version <- Enum.take(prompt.versions, 3)} class="text-xs text-[#87938A]">
-                  Version {version.version} · {String.slice(version.sha256, 0, 12)}
-                </p>
               </div>
               <div
                 :if={@viewing == prompt.id}

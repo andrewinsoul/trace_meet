@@ -16,8 +16,7 @@ defmodule TraceMeet.AI.GuardrailSeeder do
     hash = :crypto.hash(:sha256, instruction) |> Base.encode16(case: :lower)
 
     unless Repo.get_by(GuardrailVersion, guardrail_id: guardrail.id, version: 1) do
-      Repo.insert!(GuardrailVersion.changeset(%GuardrailVersion{}, %{
-        guardrail_id: guardrail.id,
+      Repo.insert!(GuardrailVersion.changeset(%GuardrailVersion{guardrail_id: guardrail.id}, %{
         version: 1,
         instruction: instruction,
         sha256: hash

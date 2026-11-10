@@ -14,7 +14,7 @@ defmodule TraceMeet.AI.GuardrailVersion do
 
   def changeset(version, attrs) do
     version
-    |> cast(attrs, [:guardrail_id, :version, :instruction, :sha256])
+    |> cast(attrs, [:version, :instruction, :sha256])
     |> validate_required([:guardrail_id, :version, :instruction, :sha256])
     |> unique_constraint([:guardrail_id, :version])
     |> foreign_key_constraint(:guardrail_id)

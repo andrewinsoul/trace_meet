@@ -1,7 +1,7 @@
 defmodule TraceMeet.AI.Configuration do
   import Ecto.Query
 
-  alias TraceMeet.AI.{AdvisorPrompt, AdvisorPromptVersion, Guardrail, GuardrailVersion}
+  alias TraceMeet.AI.{AdvisorPrompt, Guardrail, GuardrailVersion}
   alias TraceMeet.Repo
 
   def list_guardrails do
@@ -17,8 +17,7 @@ defmodule TraceMeet.AI.Configuration do
     Repo.all(
       from(p in AdvisorPrompt,
         where: p.advisor_id == ^advisor_id,
-        order_by: [desc: p.is_default, asc: p.name],
-        preload: [versions: ^from(v in AdvisorPromptVersion, order_by: [desc: v.version])]
+        order_by: [desc: p.is_default, asc: p.name]
       )
     )
   end
@@ -26,8 +25,7 @@ defmodule TraceMeet.AI.Configuration do
   def get_advisor_prompt(advisor_id, prompt_id) do
     Repo.one(
       from(p in AdvisorPrompt,
-        where: p.id == ^prompt_id and p.advisor_id == ^advisor_id,
-        preload: [versions: ^from(v in AdvisorPromptVersion, order_by: [desc: v.version])]
+        where: p.id == ^prompt_id and p.advisor_id == ^advisor_id
       )
     )
   end
@@ -39,22 +37,20 @@ defmodule TraceMeet.AI.Configuration do
       first_prompt? = not advisor_has_prompts?(advisor_id)
 
       prompt_attrs = %{
-        advisor_id: advisor_id,
         name: attrs["name"],
         meeting_type: attrs["meeting_type"] || "general_consultation",
         other_meeting_type: attrs["other_meeting_type"],
-        active_version: 1,
+        instructions: instructions,
         is_default: first_prompt? or attrs["is_default"] in ["true", true]
       }
 
-      changeset = AdvisorPrompt.changeset(%AdvisorPrompt{}, prompt_attrs)
+      changeset = AdvisorPrompt.changeset(%AdvisorPrompt{advisor_id: advisor_id}, prompt_attrs)
       prompt = Repo.insert!(changeset)
 
       if prompt.is_default do
         clear_default(advisor_id, prompt.id)
       end
 
-      Repo.insert!(version_changeset(prompt.id, 1, instructions))
       prompt
     end)
   end
@@ -74,17 +70,19 @@ defmodule TraceMeet.AI.Configuration do
     prompt =
       Repo.one(
         from(p in AdvisorPrompt,
-          where: p.advisor_id == ^advisor_id and p.is_default,
-          preload: [:versions]
+          where: p.advisor_id == ^advisor_id and p.is_default
         )
       )
 
     case prompt do
       nil -> nil
       prompt ->
-        version = Enum.find(prompt.versions, &(&1.version == prompt.active_version))
-        %{id: prompt.id, name: prompt.name, version: version.version,
-          instructions: version.instructions, sha256: version.sha256}
+        %{
+          id: prompt.id,
+          name: prompt.name,
+          instructions: prompt.instructions,
+          sha256: hash(prompt.instructions)
+        }
     end
   end
 
@@ -119,15 +117,6 @@ defmodule TraceMeet.AI.Configuration do
       end
 
     Repo.update_all(query, set: [is_default: false, updated_at: DateTime.utc_now()])
-  end
-
-  defp version_changeset(prompt_id, version, instructions) do
-    AdvisorPromptVersion.changeset(%AdvisorPromptVersion{}, %{
-      advisor_prompt_id: prompt_id,
-      version: version,
-      instructions: instructions,
-      sha256: hash(instructions)
-    })
   end
 
   defp hash(content), do: :crypto.hash(:sha256, content) |> Base.encode16(case: :lower)

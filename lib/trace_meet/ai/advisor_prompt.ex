@@ -8,18 +8,18 @@ defmodule TraceMeet.AI.AdvisorPrompt do
     field :name, :string
     field :meeting_type, :string, default: "general_consultation"
     field :other_meeting_type, :string
-    field :active_version, :integer, default: 1
+    field :instructions, :string
     field :is_default, :boolean, default: false
     belongs_to :advisor, TraceMeet.Accounts.User
-    has_many :versions, TraceMeet.AI.AdvisorPromptVersion
     timestamps(type: :utc_datetime_usec)
   end
 
   def changeset(prompt, attrs) do
     prompt
-    |> cast(attrs, [:advisor_id, :name, :meeting_type, :other_meeting_type, :active_version, :is_default])
-    |> validate_required([:advisor_id, :name, :meeting_type, :active_version])
+    |> cast(attrs, [:name, :meeting_type, :other_meeting_type, :instructions, :is_default])
+    |> validate_required([:advisor_id, :name, :meeting_type, :instructions])
     |> validate_length(:name, max: 100)
+    |> validate_length(:instructions, max: 100_000)
     |> validate_inclusion(:meeting_type, TraceMeet.Meetings.Types.values())
     |> validate_other_meeting_type()
     |> validate_length(:meeting_type, max: 80)

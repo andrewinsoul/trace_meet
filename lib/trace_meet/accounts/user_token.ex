@@ -15,7 +15,7 @@ defmodule TraceMeet.Accounts.UserToken do
 
   def changeset(token, attrs) do
     token
-    |> cast(attrs, [:token, :context, :user_id])
+    |> cast(attrs, [:token, :context])
     |> validate_required([:token, :context, :user_id])
     |> unique_constraint(:token)
     |> foreign_key_constraint(:user_id)

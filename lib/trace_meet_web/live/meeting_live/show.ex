@@ -470,7 +470,7 @@ defmodule TraceMeetWeb.MeetingLive.Show do
                       <span class="font-semibold text-[#26352B]">{processing_status(run.status)}</span>
                     </div>
                     <p class="text-[11px] text-[#87938A]">
-                      Prompt {run.prompt_version} · Model {run.model}
+                      Advisor prompt · Model {run.model}
                     </p>
                     <%= if run.status == "failed" and run.error_message do %>
                       <p class="text-xs text-[#A33B32]">
