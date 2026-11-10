@@ -28,11 +28,16 @@ defmodule TraceMeet.ProcessingRuns.ProcessTranscriptWorker do
              :ok <- broadcast_update(run),
              %Transcript{} = transcript <- get_transcript(advisor_id, transcript_id),
              {:ok, cleaned} <-
-               AI.clean_transcript(transcript.content, %{
-                 version: run.prompt_version,
-                 content: run.prompt_snapshot,
-                 sha256: run.prompt_sha256
-               }, run.model),
+               AI.clean_transcript(
+                 transcript.content,
+                 %{
+                   version: run.prompt_version,
+                   content: run.prompt_snapshot,
+                   sha256: run.prompt_sha256
+                 },
+                 run.guardrails_snapshot,
+                 run.model
+               ),
              :ok <- persist_result(run, cleaned) do
           :ok
         else

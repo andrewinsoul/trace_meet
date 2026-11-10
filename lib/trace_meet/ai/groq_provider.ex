@@ -3,7 +3,7 @@ defmodule TraceMeet.AI.GroqProvider do
 
 
 
-  def clean_transcript(content, system_prompt, model)
+  def clean_transcript(content, %{system_prompt: system_prompt}, model)
       when is_binary(content) and is_binary(system_prompt) and is_binary(model) do
     with {:ok, api_key} <- api_key(),
          {:ok, response} <- request(api_key, model, content, system_prompt),
