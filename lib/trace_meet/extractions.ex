@@ -4,56 +4,75 @@ defmodule TraceMeet.Extractions do
   alias Ecto.Multi
   alias TraceMeet.Repo
   alias TraceMeet.ProcessingRuns.ProcessingRun
-  alias TraceMeet.Extractions.{ExtractionProposal, ExtractionProposalReview}
+  alias TraceMeet.Extractions.{ExtractionProposal, ExtractionProposalReview, ExtractionProposalSource, ExtractionProposalEvidence, ChunkExtraction}
 
-  def create_proposals(%ProcessingRun{} = run, proposals) when is_list(proposals) do
+  def create_proposals(%ProcessingRun{} = run, proposals, extractions \\ [], segments \\ [])
+      when is_list(proposals) and is_list(extractions) and is_list(segments) do
     Multi.new()
     |> Multi.run(:chunks_ready, fn repo, _changes ->
-      total =
-        repo.aggregate(
-          from(c in TraceMeet.ProcessingRuns.ProcessingRunChunk,
-            where: c.processing_run_id == ^run.id
-          ),
-          :count
-        )
-
-      incomplete =
-        repo.aggregate(
-          from(c in TraceMeet.ProcessingRuns.ProcessingRunChunk,
-            where: c.processing_run_id == ^run.id and c.status != "completed"
-          ),
-          :count
-        )
-
+      total = repo.aggregate(from(c in TraceMeet.ProcessingRuns.ProcessingRunChunk, where: c.processing_run_id == ^run.id), :count)
+      incomplete = repo.aggregate(from(c in TraceMeet.ProcessingRuns.ProcessingRunChunk, where: c.processing_run_id == ^run.id and c.status != "completed"), :count)
       if total > 0 and incomplete == 0, do: {:ok, :ready}, else: {:error, :chunks_not_completed}
     end)
     |> Multi.run(:proposals, fn repo, _changes ->
       Enum.reduce_while(proposals, {:ok, []}, fn attrs, {:ok, acc} ->
-        changeset =
-          ExtractionProposal.changeset(%ExtractionProposal{processing_run_id: run.id}, attrs)
+        categories = attrs[:categories] || []
+        description = attrs[:description]
+        fingerprint = :crypto.hash(:sha256, Enum.join(Enum.sort(categories), ",") <> ":" <> String.downcase(String.trim(description))) |> Base.encode16(case: :lower)
+        category = List.first(categories)
 
-        case repo.insert(changeset,
-               on_conflict: :nothing,
-               conflict_target: [:processing_run_id, :fingerprint]
-             ) do
-          {:ok, _proposal} -> {:cont, {:ok, acc}}
+        proposal_attrs = %{
+          fingerprint: fingerprint, category: category, categories: categories,
+          uncertainties: attrs[:uncertainties] || %{},
+          title: String.slice(description, 0, 255), description: description,
+          owner: attrs[:owner], due_date: attrs[:deadline], confidence: attrs[:confidence],
+          status: "pending", evidence: %{"quotes" => attrs[:evidence_quotes] || []}
+        }
+
+        changeset = ExtractionProposal.changeset(%ExtractionProposal{processing_run_id: run.id}, proposal_attrs)
+        case repo.insert(changeset, on_conflict: :nothing, conflict_target: [:processing_run_id, :fingerprint]) do
+          {:ok, _proposal} ->
+            persisted = repo.one!(from(p in ExtractionProposal, where: p.processing_run_id == ^run.id and p.fingerprint == ^fingerprint))
+            {:cont, {:ok, [{persisted, attrs} | acc]}}
           {:error, reason} -> {:halt, {:error, reason}}
         end
       end)
       |> case do
-        {:ok, _} ->
-          persisted =
-            repo.all(
-              from(p in ExtractionProposal,
-                where: p.processing_run_id == ^run.id,
-                order_by: p.inserted_at
+        {:ok, proposal_attrs} ->
+          Enum.each(proposal_attrs, fn {proposal, attrs} ->
+            source_extractions =
+              attrs[:source_extraction_indexes]
+              |> List.wrap()
+              |> Enum.uniq()
+              |> Enum.map(&Enum.at(extractions, &1))
+              |> Enum.filter(&match?(%ChunkExtraction{}, &1))
+
+            Enum.each(source_extractions, fn extraction ->
+              repo.insert!(
+                ExtractionProposalSource.changeset(
+                  %ExtractionProposalSource{extraction_proposal_id: proposal.id, chunk_extraction_id: extraction.id}, %{}
+                ), on_conflict: :nothing
               )
-            )
 
-          {:ok, persisted}
-
-        error ->
-          error
+              Enum.each(extraction.source_segment_ids, fn segment_id ->
+                case Enum.find(segments, &(&1.id == segment_id)) do
+                  nil -> :ok
+                  segment ->
+                    repo.insert!(
+                      ExtractionProposalEvidence.changeset(
+                        %ExtractionProposalEvidence{extraction_proposal_id: proposal.id},
+                        %{
+                          segment_id: segment.id, source_start: segment[:source_start], source_end: segment[:source_end],
+                          speaker: segment[:speaker], timestamp: segment[:timestamp], quote: segment[:source_quote]
+                        }
+                      ), on_conflict: :nothing
+                    )
+                end
+              end)
+            end)
+          end)
+          {:ok, Enum.map(proposal_attrs, &elem(&1, 0))}
+        error -> error
       end
     end)
     |> Repo.transaction()
@@ -105,6 +124,9 @@ defmodule TraceMeet.Extractions do
 
   def review_proposal(advisor_id, proposal_id, action, attrs)
       when action in ["approved", "rejected", "edited"] do
+    if action == "rejected" and (not is_binary(attrs[:rejection_reason]) or String.trim(attrs[:rejection_reason]) == "") do
+      {:error, :rejection_reason_required}
+    else
     Multi.new()
     |> Multi.run(:proposal, fn repo, _changes ->
       proposal =
@@ -127,7 +149,7 @@ defmodule TraceMeet.Extractions do
       changes =
         case action do
           "approved" -> %{status: "approved", reviewed_at: DateTime.utc_now()}
-          "rejected" -> %{status: "rejected", reviewed_at: DateTime.utc_now()}
+          "rejected" -> %{status: "rejected", reviewed_at: DateTime.utc_now(), rejection_reason: attrs[:rejection_reason]}
           "edited" -> Map.take(attrs, [:title, :description, :owner, :due_date, :evidence])
         end
 
@@ -153,6 +175,7 @@ defmodule TraceMeet.Extractions do
     |> case do
       {:ok, %{updated_proposal: proposal}} -> {:ok, proposal}
       {:error, _operation, reason, _changes} -> {:error, reason}
+    end
     end
   end
 
@@ -217,6 +240,9 @@ defmodule TraceMeet.Extractions do
   defp proposal_values(proposal) do
     Map.take(proposal, [
       :category,
+      :categories,
+      :uncertainties,
+      :rejection_reason,
       :title,
       :description,
       :owner,

@@ -3,6 +3,7 @@ defmodule TraceMeet.ProcessingRuns.ProcessingRunChunk do
   import Ecto.Changeset
 
   alias TraceMeet.ProcessingRuns.ProcessingRun
+  alias TraceMeet.Extractions.ChunkExtraction
 
   @primary_key {:id, :binary_id, autogenerate: true}
   @foreign_key_type :binary_id
@@ -12,6 +13,7 @@ defmodule TraceMeet.ProcessingRuns.ProcessingRunChunk do
     field :sequence, :integer
     field :content, :string
     field :token_count, :integer, default: 0
+    field :attempt_count, :integer, default: 0
     field :cleaned_start, :integer
     field :cleaned_end, :integer
     field :source_references, :map, default: %{}
@@ -21,19 +23,21 @@ defmodule TraceMeet.ProcessingRuns.ProcessingRunChunk do
     field :started_at, :utc_datetime_usec
     field :completed_at, :utc_datetime_usec
     belongs_to :processing_run, ProcessingRun
+    has_many :extractions, ChunkExtraction, foreign_key: :processing_run_chunk_id
     timestamps(type: :utc_datetime_usec)
   end
 
   def changeset(chunk, attrs) do
     chunk
     |> cast(attrs, [
-      :sequence, :content, :token_count, :cleaned_start, :cleaned_end,
+      :sequence, :content, :token_count, :attempt_count, :cleaned_start, :cleaned_end,
       :source_references, :status, :extraction_result, :error_message,
       :started_at, :completed_at
     ])
     |> validate_required([:processing_run_id, :sequence, :content, :cleaned_start, :cleaned_end])
     |> validate_number(:sequence, greater_than: 0)
     |> validate_number(:token_count, greater_than_or_equal_to: 0)
+    |> validate_number(:attempt_count, greater_than_or_equal_to: 0)
     |> validate_number(:cleaned_start, greater_than_or_equal_to: 0)
     |> validate_number(:cleaned_end, greater_than: 0)
     |> validate_offset_order()
@@ -42,6 +46,7 @@ defmodule TraceMeet.ProcessingRuns.ProcessingRunChunk do
     |> check_constraint(:status, name: :processing_run_chunks_status_check)
     |> check_constraint(:sequence, name: :processing_run_chunks_sequence_check)
     |> check_constraint(:token_count, name: :processing_run_chunks_token_count_check)
+    |> check_constraint(:attempt_count, name: :processing_run_chunks_attempt_count_check)
     |> check_constraint(:cleaned_end, name: :processing_run_chunks_offsets_check)
     |> unique_constraint([:processing_run_id, :sequence])
     |> foreign_key_constraint(:processing_run_id)

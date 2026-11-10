@@ -21,7 +21,12 @@ config :trace_meet, Oban,
 config :trace_meet,
   ai_provider: TraceMeet.AI.MockProvider,
   ai_model: "openai/gpt-oss-120b",
-  processing_max_attempts: 5
+  processing_max_attempts: 5,
+  chunk_max_attempts: 3,
+  chunk_target_tokens: 6_000,
+  chunk_max_tokens: 7_000,
+  chunk_overlap_tokens: 300,
+  consolidation_max_tokens: 12_000
 config :esbuild,
   version: "0.25.4",
   trace_meet: [
