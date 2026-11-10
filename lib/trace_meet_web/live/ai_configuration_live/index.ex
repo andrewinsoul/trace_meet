@@ -213,7 +213,7 @@ defmodule TraceMeetWeb.AIConfigurationLive.Index do
               New prompt configuration
             </h2>
             <p class="mt-1 text-xs leading-5 text-[#68756C]">
-              Prompt configurations are immutable. To change your instructions, create a new configuration. Previous configurations remain available in processing history.
+              These instructions define how TraceMeet cleans transcripts for this meeting type. Be explicit about what to preserve, remove, and emphasize. TraceMeet's platform guardrails are always applied and cannot be overridden. Configurations are immutable; create a new one to change your instructions.
             </p>
             <.form for={@form} as={:prompt} phx-submit="save" class="mt-5 space-y-4">
               <div>
@@ -252,13 +252,13 @@ defmodule TraceMeetWeb.AIConfigurationLive.Index do
               </div>
               <div>
                 <label class="mb-1.5 block text-sm font-medium text-[#26352B]">
-                  Additional instructions
+                  Transcript cleaning instructions
                 </label>
                 <.textarea
                   field={@form[:instructions]}
                   rows={7}
                   required
-                  placeholder="Tell TraceMeet what to pay particular attention to..."
+                  placeholder="Describe how TraceMeet should clean this transcript, what context to preserve, and what details to emphasize..."
                 />
               </div>
               <label class="flex items-center gap-2 text-sm text-[#526057]">

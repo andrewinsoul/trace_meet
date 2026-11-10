@@ -9,17 +9,16 @@ defmodule TraceMeet.ProcessingRuns do
   alias TraceMeet.Transcripts.Transcript
 
   def enqueue(advisor_id, meeting_id, transcript_id) do
-    prompt = TraceMeet.AI.Prompts.TranscriptCleaner.snapshot()
     advisor_prompt = TraceMeet.AI.Configuration.active_prompt_snapshot(advisor_id)
 
     if is_nil(advisor_prompt) do
       {:error, :default_prompt_required}
     else
-      enqueue_with_configuration(advisor_id, meeting_id, transcript_id, prompt, advisor_prompt)
+      enqueue_with_configuration(advisor_id, meeting_id, transcript_id, advisor_prompt)
     end
   end
 
-  defp enqueue_with_configuration(advisor_id, meeting_id, transcript_id, prompt, advisor_prompt) do
+  defp enqueue_with_configuration(advisor_id, meeting_id, transcript_id, advisor_prompt) do
     meeting_type =
       Repo.one(
         from(m in Meeting,
@@ -32,11 +31,13 @@ defmodule TraceMeet.ProcessingRuns do
 
     resolved_prompt =
       [
-        prompt.content,
-        "PLATFORM GUARDRAILS:\n" <> Enum.map_join(guardrails, "\n", &("- " <> &1.instruction)),
-        "ADVISOR INSTRUCTIONS:\n" <> advisor_prompt.instructions
+        "ADVISOR TRANSCRIPT CLEANING INSTRUCTIONS:\n" <> advisor_prompt.instructions,
+        "PLATFORM GUARDRAILS (MANDATORY):\n" <>
+          Enum.map_join(guardrails, "\n", &("- " <> &1.instruction))
       ]
       |> Enum.join("\n\n")
+
+    prompt_version = "advisor-prompt-v#{advisor_prompt.version}"
 
     model = Application.get_env(:trace_meet, :ai_model, "openai/gpt-oss-120b")
 
@@ -67,7 +68,7 @@ defmodule TraceMeet.ProcessingRuns do
         advisor_id: advisor_id,
         status: "queued",
         attempt_count: 0,
-        prompt_version: prompt.version,
+        prompt_version: prompt_version,
         prompt_snapshot: resolved_prompt,
         prompt_sha256: (:crypto.hash(:sha256, resolved_prompt) |> Base.encode16(case: :lower)),
         model: model,
