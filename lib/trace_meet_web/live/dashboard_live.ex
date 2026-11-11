@@ -38,7 +38,9 @@ defmodule TraceMeetWeb.DashboardLive do
   defp status_label("in_progress"), do: "In progress"
   defp status_label("completed"), do: "Completed"
   defp status_label("cancelled"), do: "Cancelled"
-  defp status_label(status), do: status |> to_string() |> String.replace("_", " ") |> String.capitalize()
+
+  defp status_label(status),
+    do: status |> to_string() |> String.replace("_", " ") |> String.capitalize()
 
   @impl true
   def render(assigns) do
@@ -66,7 +68,10 @@ defmodule TraceMeetWeb.DashboardLive do
         </.link>
       </div>
 
-      <section aria-label="Workspace summary" class="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <section
+        aria-label="Workspace summary"
+        class="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4"
+      >
         <.summary_card label="Total clients" value={@client_count} />
         <.summary_card label="Total meetings" value={@meeting_count} />
         <.summary_card label="Pending action items" value={@pending_action_count} />
@@ -80,14 +85,20 @@ defmodule TraceMeetWeb.DashboardLive do
               <h2 class="text-base font-semibold text-[#17231C]">Recent meetings</h2>
               <p class="mt-1 text-sm text-[#87938A]">Your latest client conversations</p>
             </div>
-            <.link navigate={~p"/meetings"} class="text-sm font-semibold text-[#087C43] hover:underline">
+            <.link
+              navigate={~p"/meetings"}
+              class="text-sm font-semibold text-[#087C43] hover:underline"
+            >
               View all
             </.link>
           </div>
           <div :if={@recent_meetings == []} class="px-5 py-10 text-center">
             <p class="text-sm font-medium text-[#526057]">No meetings yet</p>
             <p class="mt-1 text-sm text-[#87938A]">Your recent meetings will appear here.</p>
-            <.link navigate={~p"/meetings/new"} class="mt-4 inline-flex text-sm font-semibold text-[#087C43] hover:underline">
+            <.link
+              navigate={~p"/meetings/new"}
+              class="mt-4 inline-flex text-sm font-semibold text-[#087C43] hover:underline"
+            >
               Create your first meeting
             </.link>
           </div>
@@ -123,14 +134,20 @@ defmodule TraceMeetWeb.DashboardLive do
               <h2 class="text-base font-semibold text-[#17231C]">Upcoming meetings</h2>
               <p class="mt-1 text-sm text-[#87938A]">What’s next on your calendar</p>
             </div>
-            <.link navigate={~p"/meetings"} class="text-sm font-semibold text-[#087C43] hover:underline">
+            <.link
+              navigate={~p"/meetings"}
+              class="text-sm font-semibold text-[#087C43] hover:underline"
+            >
               View all
             </.link>
           </div>
           <div :if={@upcoming_meetings == []} class="px-5 py-10 text-center">
             <p class="text-sm font-medium text-[#526057]">Nothing scheduled</p>
             <p class="mt-1 text-sm text-[#87938A]">Upcoming meetings will appear here.</p>
-            <.link navigate={~p"/meetings/new"} class="mt-4 inline-flex text-sm font-semibold text-[#087C43] hover:underline">
+            <.link
+              navigate={~p"/meetings/new"}
+              class="mt-4 inline-flex text-sm font-semibold text-[#087C43] hover:underline"
+            >
               Schedule a meeting
             </.link>
           </div>
@@ -153,13 +170,22 @@ defmodule TraceMeetWeb.DashboardLive do
       <section class="mt-6 rounded-xl border border-[#E4EAE5] bg-white px-5 py-4">
         <h2 class="text-sm font-semibold text-[#26352B]">Quick actions</h2>
         <div class="mt-3 flex flex-wrap gap-3">
-          <.link navigate={~p"/clients/new"} class="rounded-lg border border-[#DCE5DE] px-3.5 py-2 text-sm font-medium text-[#526057] transition hover:border-[#087C43] hover:text-[#087C43]">
+          <.link
+            navigate={~p"/clients/new"}
+            class="rounded-lg border border-[#DCE5DE] px-3.5 py-2 text-sm font-medium text-[#526057] transition hover:border-[#087C43] hover:text-[#087C43]"
+          >
             Add a client
           </.link>
-          <.link navigate={~p"/meetings/new"} class="rounded-lg border border-[#DCE5DE] px-3.5 py-2 text-sm font-medium text-[#526057] transition hover:border-[#087C43] hover:text-[#087C43]">
+          <.link
+            navigate={~p"/meetings/new"}
+            class="rounded-lg border border-[#DCE5DE] px-3.5 py-2 text-sm font-medium text-[#526057] transition hover:border-[#087C43] hover:text-[#087C43]"
+          >
             Schedule a meeting
           </.link>
-          <.link navigate={~p"/actions"} class="rounded-lg border border-[#DCE5DE] px-3.5 py-2 text-sm font-medium text-[#526057] transition hover:border-[#087C43] hover:text-[#087C43]">
+          <.link
+            navigate={~p"/actions"}
+            class="rounded-lg border border-[#DCE5DE] px-3.5 py-2 text-sm font-medium text-[#526057] transition hover:border-[#087C43] hover:text-[#087C43]"
+          >
             Review action items
           </.link>
         </div>

@@ -72,7 +72,16 @@ defmodule TraceMeetWeb.SecurityLive.Index do
         <section class="rounded-2xl border border-[#E5EBE6] bg-white p-5 sm:p-7">
           <div class="flex items-start gap-3 border-b border-[#EEF2EF] pb-5">
             <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#EAF5EE] text-[#087C43]">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5" aria-hidden="true">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                class="h-5 w-5"
+                aria-hidden="true"
+              >
                 <rect x="4" y="10" width="16" height="11" rx="2" />
                 <path d="M8 10V7a4 4 0 0 1 8 0v3M12 14v3" />
               </svg>
@@ -128,7 +137,16 @@ defmodule TraceMeetWeb.SecurityLive.Index do
 
         <aside class="h-fit rounded-2xl border border-[#E5EBE6] bg-white p-5">
           <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-[#EAF5EE] text-[#087C43]">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5" aria-hidden="true">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              class="h-5 w-5"
+              aria-hidden="true"
+            >
               <path d="M12 22s8-4 8-11V5l-8-3-8 3v6c0 7 8 11 8 11Z" />
               <path d="m9 12 2 2 4-4" />
             </svg>

@@ -37,7 +37,11 @@ defmodule TraceMeet.Meetings.Meeting do
         local_meeting_at =
           case meeting.scheduled_at || meeting.started_at do
             %DateTime{} = value ->
-              case DateTime.shift_zone(value, meeting.time_zone || "Etc/UTC", Tzdata.TimeZoneDatabase) do
+              case DateTime.shift_zone(
+                     value,
+                     meeting.time_zone || "Etc/UTC",
+                     Tzdata.TimeZoneDatabase
+                   ) do
                 {:ok, local_value} -> DateTime.to_naive(local_value)
                 _ -> nil
               end
@@ -53,7 +57,15 @@ defmodule TraceMeet.Meetings.Meeting do
 
     changeset =
       meeting
-      |> cast(attrs, [:title, :description, :status, :meeting_at, :time_zone, :meeting_type, :other_meeting_type])
+      |> cast(attrs, [
+        :title,
+        :description,
+        :status,
+        :meeting_at,
+        :time_zone,
+        :meeting_type,
+        :other_meeting_type
+      ])
       |> update_change(:title, &String.trim/1)
       |> validate_required([:title, :status, :time_zone, :meeting_type])
       |> validate_inclusion(:meeting_type, TraceMeet.Meetings.Types.values())

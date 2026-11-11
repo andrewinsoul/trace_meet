@@ -4,8 +4,10 @@ defmodule TraceMeet.Repo.Migrations.CreateExtractionPipelineStorage do
   def change do
     create table(:processing_run_chunks, primary_key: false) do
       add :id, :binary_id, primary_key: true
+
       add :processing_run_id,
           references(:processing_runs, type: :binary_id, on_delete: :delete_all), null: false
+
       add :sequence, :integer, null: false
       add :content, :text, null: false
       add :token_count, :integer, null: false, default: 0
@@ -41,8 +43,10 @@ defmodule TraceMeet.Repo.Migrations.CreateExtractionPipelineStorage do
 
     create table(:extraction_proposals, primary_key: false) do
       add :id, :binary_id, primary_key: true
+
       add :processing_run_id,
           references(:processing_runs, type: :binary_id, on_delete: :delete_all), null: false
+
       add :fingerprint, :string, null: false
       add :category, :string, null: false
       add :title, :string, null: false
@@ -60,7 +64,8 @@ defmodule TraceMeet.Repo.Migrations.CreateExtractionPipelineStorage do
     create index(:extraction_proposals, [:processing_run_id, :status])
 
     create constraint(:extraction_proposals, :extraction_proposals_category_check,
-             check: "category IN ('decision', 'action_item', 'commitment', 'risk', 'unresolved_question')"
+             check:
+               "category IN ('decision', 'action_item', 'commitment', 'risk', 'unresolved_question')"
            )
 
     create constraint(:extraction_proposals, :extraction_proposals_status_check,
@@ -73,8 +78,10 @@ defmodule TraceMeet.Repo.Migrations.CreateExtractionPipelineStorage do
 
     create table(:extraction_proposal_reviews, primary_key: false) do
       add :id, :binary_id, primary_key: true
+
       add :extraction_proposal_id,
           references(:extraction_proposals, type: :binary_id, on_delete: :delete_all), null: false
+
       add :advisor_id, references(:users, type: :binary_id, on_delete: :delete_all), null: false
       add :action, :string, null: false
       add :previous_values, :map

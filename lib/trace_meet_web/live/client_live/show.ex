@@ -14,13 +14,18 @@ defmodule TraceMeetWeb.ClientLive.Show do
          |> push_navigate(to: ~p"/clients")}
 
       client ->
-        meetings = Meetings.list_meetings(socket.assigns.current_user.id, client_id: client.id, per_page: 10)
+        meetings =
+          Meetings.list_meetings(socket.assigns.current_user.id,
+            client_id: client.id,
+            per_page: 10
+          )
 
-        {:ok, assign(socket,
-          client: client,
-          meetings: meetings.entries,
-          page_title: client.name
-        )}
+        {:ok,
+         assign(socket,
+           client: client,
+           meetings: meetings.entries,
+           page_title: client.name
+         )}
     end
   end
 
@@ -129,23 +134,40 @@ defmodule TraceMeetWeb.ClientLive.Show do
             <div class="mb-4 flex items-center justify-between gap-3">
               <div>
                 <h2 class="text-base font-semibold text-[#26352B]">Meetings</h2>
-                <p class="mt-1 text-xs text-[#87938A]">Scheduled and completed conversations with this client.</p>
+                <p class="mt-1 text-xs text-[#87938A]">
+                  Scheduled and completed conversations with this client.
+                </p>
               </div>
-              <.link navigate={~p"/clients/#{@client.id}/meetings/new"} class="inline-flex shrink-0 items-center rounded-lg bg-[#087C43] px-3.5 py-2 text-xs font-semibold text-white transition hover:bg-[#066B39]">
+              <.link
+                navigate={~p"/clients/#{@client.id}/meetings/new"}
+                class="inline-flex shrink-0 items-center rounded-lg bg-[#087C43] px-3.5 py-2 text-xs font-semibold text-white transition hover:bg-[#066B39]"
+              >
                 Add meeting
               </.link>
             </div>
-            <div :if={@meetings == []} class="rounded-xl border border-dashed border-[#DCE5DE] px-4 py-8 text-center">
+            <div
+              :if={@meetings == []}
+              class="rounded-xl border border-dashed border-[#DCE5DE] px-4 py-8 text-center"
+            >
               <p class="text-sm font-medium text-[#526057]">No meetings recorded</p>
-              <p class="mt-1 text-xs text-[#87938A]">Create a meeting before or after your conversation.</p>
+              <p class="mt-1 text-xs text-[#87938A]">
+                Create a meeting before or after your conversation.
+              </p>
             </div>
             <div :if={@meetings != []} class="divide-y divide-[#EEF2EF]">
               <div :for={meeting <- @meetings} class="flex items-center justify-between gap-3 py-3">
                 <div class="min-w-0">
-                  <.link navigate={~p"/meetings/#{meeting.id}"} class="block truncate text-sm font-semibold text-[#26352B] hover:text-[#087C43]">{meeting.title}</.link>
+                  <.link
+                    navigate={~p"/meetings/#{meeting.id}"}
+                    class="block truncate text-sm font-semibold text-[#26352B] hover:text-[#087C43]"
+                  >
+                    {meeting.title}
+                  </.link>
                   <p class="mt-1 text-xs text-[#87938A]">{client_meeting_time(meeting)}</p>
                 </div>
-                <span class="shrink-0 rounded-full bg-[#F1F4F1] px-3 py-1 text-xs font-medium text-[#526057]">{meeting.status |> String.replace("_", " ") |> String.capitalize()}</span>
+                <span class="shrink-0 rounded-full bg-[#F1F4F1] px-3 py-1 text-xs font-medium text-[#526057]">
+                  {meeting.status |> String.replace("_", " ") |> String.capitalize()}
+                </span>
               </div>
             </div>
           </div>
@@ -158,8 +180,12 @@ defmodule TraceMeetWeb.ClientLive.Show do
     """
   end
 
-  defp client_meeting_time(%{status: "scheduled", scheduled_at: %NaiveDateTime{} = value}), do: "Scheduled " <> Calendar.strftime(value, "%b %d, %Y at %I:%M %p")
-  defp client_meeting_time(%{started_at: %NaiveDateTime{} = value}), do: "Met " <> Calendar.strftime(value, "%b %d, %Y at %I:%M %p")
+  defp client_meeting_time(%{status: "scheduled", scheduled_at: %NaiveDateTime{} = value}),
+    do: "Scheduled " <> Calendar.strftime(value, "%b %d, %Y at %I:%M %p")
+
+  defp client_meeting_time(%{started_at: %NaiveDateTime{} = value}),
+    do: "Met " <> Calendar.strftime(value, "%b %d, %Y at %I:%M %p")
+
   defp client_meeting_time(_meeting), do: "Date not set"
 
   defp client_notes(notes) when is_binary(notes) do

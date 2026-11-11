@@ -74,7 +74,7 @@ defmodule TraceMeet.ProcessingRuns do
           attempt_count: 0,
           prompt_version: prompt_version,
           prompt_snapshot: resolved_prompt,
-          prompt_sha256: (:crypto.hash(:sha256, resolved_prompt) |> Base.encode16(case: :lower)),
+          prompt_sha256: :crypto.hash(:sha256, resolved_prompt) |> Base.encode16(case: :lower),
           model: model,
           guardrails_snapshot: %{"guardrails" => guardrails},
           advisor_prompt_snapshot: advisor_prompt.instructions,

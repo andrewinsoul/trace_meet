@@ -331,8 +331,19 @@ defmodule TraceMeetWeb.ActionsLive.Index do
         class="flex min-h-[280px] flex-col items-center justify-center rounded-2xl border border-dashed border-[#DCE5DE] bg-white px-6 py-12 text-center"
       >
         <div class="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#EAF5EE] text-[#087C43]">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" class="h-7 w-7" aria-hidden="true">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M9 11l3 3L22 4M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.7"
+            class="h-7 w-7"
+            aria-hidden="true"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M9 11l3 3L22 4M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"
+            />
           </svg>
         </div>
         <h2 class="mt-5 text-lg font-semibold text-[#26352B]">No proposals to show</h2>
@@ -436,9 +447,18 @@ defmodule TraceMeetWeb.ActionsLive.Index do
                   phx-submit="edit"
                   class="mt-4 grid gap-3"
                 >
-                  <input type="hidden" name={proposal.edit_form[:proposal_id].name} value={proposal.id} />
+                  <input
+                    type="hidden"
+                    name={proposal.edit_form[:proposal_id].name}
+                    value={proposal.id}
+                  />
                   <.input field={proposal.edit_form[:title]} label="Title" required />
-                  <.textarea field={proposal.edit_form[:description]} label="Description" rows={3} required />
+                  <.textarea
+                    field={proposal.edit_form[:description]}
+                    label="Description"
+                    rows={3}
+                    required
+                  />
                   <div class="grid gap-3 sm:grid-cols-2">
                     <.input field={proposal.edit_form[:owner]} label="Owner" />
                     <.input field={proposal.edit_form[:due_date]} type="date" label="Due date" />
@@ -461,7 +481,11 @@ defmodule TraceMeetWeb.ActionsLive.Index do
                   phx-submit="reject"
                   class="flex w-full min-w-0 flex-col gap-2 sm:flex-1 sm:flex-row sm:items-end"
                 >
-                  <input type="hidden" name={proposal.reject_form[:proposal_id].name} value={proposal.id} />
+                  <input
+                    type="hidden"
+                    name={proposal.reject_form[:proposal_id].name}
+                    value={proposal.id}
+                  />
                   <div class="w-full min-w-0 sm:flex-1">
                     <.input
                       field={proposal.reject_form[:rejection_reason]}
@@ -498,7 +522,9 @@ defmodule TraceMeetWeb.ActionsLive.Index do
                 </summary>
                 <div class="mt-3 space-y-3">
                   <div :for={review <- proposal.reviews} class="rounded-lg bg-[#F7F9F7] p-3">
-                    <p class="text-sm font-medium text-[#26352B]">{String.capitalize(review.action)}</p>
+                    <p class="text-sm font-medium text-[#26352B]">
+                      {String.capitalize(review.action)}
+                    </p>
                     <p :if={review.notes} class="mt-1 text-sm text-[#68756C]">{review.notes}</p>
                     <p class="mt-1 text-xs text-[#87938A]">
                       {Calendar.strftime(review.inserted_at, "%b %d, %Y at %H:%M UTC")}

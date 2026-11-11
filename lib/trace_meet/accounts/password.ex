@@ -7,13 +7,16 @@ defmodule TraceMeet.Accounts.Password do
     salt = :crypto.strong_rand_bytes(16)
     digest = derive(password, salt, @iterations)
 
-    Enum.join([
-      "",
-      "pbkdf2-sha256",
-      Integer.to_string(@iterations),
-      Base.url_encode64(salt, padding: false),
-      Base.url_encode64(digest, padding: false)
-    ], "$")
+    Enum.join(
+      [
+        "",
+        "pbkdf2-sha256",
+        Integer.to_string(@iterations),
+        Base.url_encode64(salt, padding: false),
+        Base.url_encode64(digest, padding: false)
+      ],
+      "$"
+    )
   end
 
   def verify(password, encoded)
@@ -43,6 +46,7 @@ defmodule TraceMeet.Accounts.Password do
 
   def dummy_verify(password) when is_binary(password) do
     password = binary_part(password, 0, min(byte_size(password), 128))
+
     derive(password, @dummy_salt, @iterations)
     |> then(fn _ -> false end)
   end

@@ -65,7 +65,16 @@ defmodule TraceMeetWeb.ProfileLive.Index do
 
         <aside class="h-fit rounded-2xl border border-[#E5EBE6] bg-white p-5">
           <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-[#EAF5EE] text-[#087C43]">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5" aria-hidden="true">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              class="h-5 w-5"
+              aria-hidden="true"
+            >
               <path d="M12 22s8-4 8-11V5l-8-3-8 3v6c0 7 8 11 8 11Z" />
               <path d="m9 12 2 2 4-4" />
             </svg>
@@ -79,7 +88,16 @@ defmodule TraceMeetWeb.ProfileLive.Index do
             class="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-[#087C43] hover:text-[#066A39]"
           >
             Go to Security
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" aria-hidden="true">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              class="h-4 w-4"
+              aria-hidden="true"
+            >
               <path d="M5 12h14M13 6l6 6-6 6" />
             </svg>
           </.link>

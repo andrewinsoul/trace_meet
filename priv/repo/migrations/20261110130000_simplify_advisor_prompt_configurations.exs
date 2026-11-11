@@ -31,9 +31,11 @@ defmodule TraceMeet.Repo.Migrations.SimplifyAdvisorPromptConfigurations do
   def down do
     create table(:advisor_prompt_versions, primary_key: false) do
       add :id, :binary_id, primary_key: true
+
       add :advisor_prompt_id,
           references(:advisor_prompt_configurations, type: :binary_id, on_delete: :delete_all),
           null: false
+
       add :version, :integer, null: false
       add :instructions, :text, null: false
       add :sha256, :string, null: false

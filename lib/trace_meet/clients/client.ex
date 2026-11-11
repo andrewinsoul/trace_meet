@@ -28,7 +28,9 @@ defmodule TraceMeet.Clients.Client do
     |> validate_required([:name])
     |> validate_length(:name, max: 160)
     |> validate_length(:email, max: 160)
-    |> validate_format(:email, ~r/^[^\s]+@[^\s]+\.[^\s]+$/, message: "must be a valid email address")
+    |> validate_format(:email, ~r/^[^\s]+@[^\s]+\.[^\s]+$/,
+      message: "must be a valid email address"
+    )
     |> validate_length(:phone, max: 40)
     |> validate_length(:company, max: 160)
     |> validate_length(:notes, max: 5_000)

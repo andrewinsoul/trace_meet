@@ -12,7 +12,9 @@ defmodule TraceMeet.ProcessingRuns.Chunker do
 
     paragraphs =
       Regex.scan(~r/[^\n]+(?:\n+|$)/u, content, return: :index)
-      |> Enum.map(fn [{start, length}] -> {start, start + length, binary_part(content, start, length)} end)
+      |> Enum.map(fn [{start, length}] ->
+        {start, start + length, binary_part(content, start, length)}
+      end)
       |> Enum.reject(fn {_start, _end, text} -> String.trim(text) == "" end)
       |> Enum.flat_map(&split_oversized(&1, max_tokens))
 
@@ -31,11 +33,14 @@ defmodule TraceMeet.ProcessingRuns.Chunker do
 
   defp build_chunks(paragraphs, segments, target, max_tokens, overlap, acc) do
     case take_chunk(paragraphs, target, max_tokens, [], 0) do
-      {:error, reason} -> {:error, reason}
+      {:error, reason} ->
+        {:error, reason}
+
       {selected, rest} ->
         [{start_offset, _first_end, _} | _] = selected
         end_offset = selected |> List.last() |> elem(1)
         text = Enum.map_join(selected, "", &elem(&1, 2))
+
         references =
           segments
           |> Enum.filter(fn segment ->
@@ -54,6 +59,7 @@ defmodule TraceMeet.ProcessingRuns.Chunker do
         }
 
         next = overlap_tail(selected, overlap) ++ rest
+
         cond do
           rest == [] -> {:ok, Enum.reverse([chunk | acc])}
           next == paragraphs -> {:error, :chunker_no_progress}
@@ -62,13 +68,14 @@ defmodule TraceMeet.ProcessingRuns.Chunker do
     end
   end
 
-
   defp split_oversized({start_offset, _end_offset, text}, max_tokens) do
     if estimated_tokens(text) <= max_tokens do
       [{start_offset, start_offset + byte_size(text), text}]
     else
       sentence_parts = indexed_parts(text, ~r/[^.!?]+[.!?]?(?:\s+|$)/u)
-      sentence_parts = if sentence_parts == [], do: indexed_parts(text, ~r/\S+\s*/u), else: sentence_parts
+
+      sentence_parts =
+        if sentence_parts == [], do: indexed_parts(text, ~r/\S+\s*/u), else: sentence_parts
 
       Enum.flat_map(sentence_parts, fn {relative_start, relative_end, sentence} ->
         if estimated_tokens(sentence) <= max_tokens do
@@ -83,34 +90,50 @@ defmodule TraceMeet.ProcessingRuns.Chunker do
 
   defp indexed_parts(text, regex) do
     Regex.scan(regex, text, return: :index)
-    |> Enum.map(fn [{start, length}] -> {start, start + length, binary_part(text, start, length)} end)
+    |> Enum.map(fn [{start, length}] ->
+      {start, start + length, binary_part(text, start, length)}
+    end)
     |> Enum.reject(fn {_start, _end, part} -> part == "" end)
   end
 
   defp group_word_parts(parts, base_offset, max_tokens) do
     {groups, current, _count, current_start, _last_end} =
-      Enum.reduce(parts, {[], [], 0, nil, nil}, fn {start, finish, text}, {groups, current, count, current_start, _last_end} ->
+      Enum.reduce(parts, {[], [], 0, nil, nil}, fn {start, finish, text},
+                                                   {groups, current, count, current_start,
+                                                    _last_end} ->
         size = estimated_tokens(text)
+
         if current != [] and count + size > max_tokens do
           group_text = Enum.map_join(current, "", &elem(&1, 2))
           group_start = current_start
           group_end = elem(List.last(current), 1)
-          {[{base_offset + group_start, base_offset + group_end, group_text} | groups], [{start, finish, text}], size, start, finish}
+
+          {[{base_offset + group_start, base_offset + group_end, group_text} | groups],
+           [{start, finish, text}], size, start, finish}
         else
-          {groups, current ++ [{start, finish, text}], count + size, current_start || start, finish}
+          {groups, current ++ [{start, finish, text}], count + size, current_start || start,
+           finish}
         end
       end)
 
     final =
-      if current == [], do: groups, else: [{base_offset + current_start, base_offset + elem(List.last(current), 1), Enum.map_join(current, "", &elem(&1, 2))} | groups]
+      if current == [],
+        do: groups,
+        else: [
+          {base_offset + current_start, base_offset + elem(List.last(current), 1),
+           Enum.map_join(current, "", &elem(&1, 2))}
+          | groups
+        ]
 
     Enum.reverse(final)
   end
 
   defp take_chunk([], _target, _max, [], _count), do: {:error, :empty_chunk}
   defp take_chunk([], _target, _max, selected, _count), do: {Enum.reverse(selected), []}
+
   defp take_chunk([{_s, _e, text} = paragraph | rest], target, max, selected, count) do
     size = estimated_tokens(text)
+
     cond do
       count + size > max and selected != [] -> {Enum.reverse(selected), [paragraph | rest]}
       count + size > max -> {:error, :paragraph_exceeds_max_chunk_size}
@@ -126,12 +149,15 @@ defmodule TraceMeet.ProcessingRuns.Chunker do
       []
     else
       selected
-    |> Enum.reverse()
-    |> Enum.reduce_while({[], 0}, fn paragraph, {acc, count} ->
-      size = estimated_tokens(elem(paragraph, 2))
-      if count >= overlap, do: {:halt, {acc, count}}, else: {:cont, {[paragraph | acc], count + size}}
-    end)
-    |> elem(0)
+      |> Enum.reverse()
+      |> Enum.reduce_while({[], 0}, fn paragraph, {acc, count} ->
+        size = estimated_tokens(elem(paragraph, 2))
+
+        if count >= overlap,
+          do: {:halt, {acc, count}},
+          else: {:cont, {[paragraph | acc], count + size}}
+      end)
+      |> elem(0)
     end
   end
 end

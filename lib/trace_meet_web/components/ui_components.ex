@@ -146,8 +146,10 @@ defmodule TraceMeetWeb.UIComponents do
       class={[
         "inline-flex w-full items-center justify-center gap-2 rounded-lg px-4 py-3 text-sm font-semibold transition",
         "focus:outline-none focus:ring-4 disabled:cursor-not-allowed disabled:opacity-65",
-        @variant == "primary" && "bg-[#087C43] text-white shadow-sm hover:bg-[#066B39] focus:ring-[#087C43]/20",
-        @variant == "secondary" && "border border-[#DCE5DE] bg-white text-[#26352B] hover:bg-[#F5F7F5]",
+        @variant == "primary" &&
+          "bg-[#087C43] text-white shadow-sm hover:bg-[#066B39] focus:ring-[#087C43]/20",
+        @variant == "secondary" &&
+          "border border-[#DCE5DE] bg-white text-[#26352B] hover:bg-[#F5F7F5]",
         @class
       ]}
       {@rest}

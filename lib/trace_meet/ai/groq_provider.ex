@@ -1,8 +1,6 @@
 defmodule TraceMeet.AI.GroqProvider do
   @endpoint "https://api.groq.com/openai/v1/chat/completions"
 
-
-
   def clean_transcript(content, %{system_prompt: system_prompt}, model)
       when is_binary(content) and is_binary(system_prompt) and is_binary(model) do
     with {:ok, api_key} <- api_key(),
@@ -13,8 +11,11 @@ defmodule TraceMeet.AI.GroqProvider do
     end
   end
 
-
-  def extract_chunk(content, %{system_prompt: system_prompt, guardrails_snapshot: _guardrails}, model)
+  def extract_chunk(
+        content,
+        %{system_prompt: system_prompt, guardrails_snapshot: _guardrails},
+        model
+      )
       when is_binary(content) and is_binary(system_prompt) and is_binary(model) do
     system = """
     #{system_prompt}
@@ -36,7 +37,11 @@ defmodule TraceMeet.AI.GroqProvider do
     end
   end
 
-  def consolidate(extractions, %{system_prompt: system_prompt, guardrails_snapshot: _guardrails}, model)
+  def consolidate(
+        extractions,
+        %{system_prompt: system_prompt, guardrails_snapshot: _guardrails},
+        model
+      )
       when is_list(extractions) and is_binary(system_prompt) and is_binary(model) do
     system = """
     #{system_prompt}
@@ -72,10 +77,20 @@ defmodule TraceMeet.AI.GroqProvider do
         response_format: %{type: "json_object"}
       }
 
-      case Req.post(@endpoint, json: body, headers: [{"authorization", "Bearer #{key}"}], receive_timeout: timeout, retry: false) do
-        {:ok, %Req.Response{status: status, body: response}} when status in 200..299 -> decode_response(response)
-        {:ok, %Req.Response{status: status, body: response}} -> {:error, {:groq_http_error, status, error_message(response)}}
-        {:error, reason} -> {:error, {:groq_request_failed, reason}}
+      case Req.post(@endpoint,
+             json: body,
+             headers: [{"authorization", "Bearer #{key}"}],
+             receive_timeout: timeout,
+             retry: false
+           ) do
+        {:ok, %Req.Response{status: status, body: response}} when status in 200..299 ->
+          decode_response(response)
+
+        {:ok, %Req.Response{status: status, body: response}} ->
+          {:error, {:groq_http_error, status, error_message(response)}}
+
+        {:error, reason} ->
+          {:error, {:groq_request_failed, reason}}
       end
     end
   end
@@ -83,20 +98,22 @@ defmodule TraceMeet.AI.GroqProvider do
   defp validate_items(items) do
     allowed = ["decision", "action_item", "commitment", "risk", "unresolved_question"]
 
-    valid = Enum.all?(items, fn item ->
-      is_map(item) and is_binary(item["description"]) and item["description"] != "" and
-        is_list(item["categories"]) and item["categories"] != [] and
-        Enum.all?(item["categories"], &(&1 in allowed)) and
-        (is_nil(item["owner"]) or is_binary(item["owner"])) and
-        (is_nil(item["deadline"]) or valid_date?(item["deadline"])) and
-        (is_nil(item["confidence"]) or (is_number(item["confidence"]) and item["confidence"] >= 0 and item["confidence"] <= 1)) and
-        is_list(item["uncertainties"] || []) and
-        is_list(item["evidence_quotes"] || [])
-    end)
+    valid =
+      Enum.all?(items, fn item ->
+        is_map(item) and is_binary(item["description"]) and item["description"] != "" and
+          is_list(item["categories"]) and item["categories"] != [] and
+          Enum.all?(item["categories"], &(&1 in allowed)) and
+          (is_nil(item["owner"]) or is_binary(item["owner"])) and
+          (is_nil(item["deadline"]) or valid_date?(item["deadline"])) and
+          (is_nil(item["confidence"]) or
+             (is_number(item["confidence"]) and item["confidence"] >= 0 and
+                item["confidence"] <= 1)) and
+          is_list(item["uncertainties"] || []) and
+          is_list(item["evidence_quotes"] || [])
+      end)
 
     if valid, do: :ok, else: {:error, :invalid_extraction_item}
   end
-
 
   defp validate_evidence(items) do
     if Enum.all?(items, fn item -> item["evidence_quotes"] != [] end),
@@ -109,15 +126,18 @@ defmodule TraceMeet.AI.GroqProvider do
          is_list(item["source_extraction_indexes"]) and item["source_extraction_indexes"] != [] and
            Enum.all?(item["source_extraction_indexes"], &is_integer/1)
        end),
-      do: :ok,
-      else: {:error, :consolidation_sources_required}
+       do: :ok,
+       else: {:error, :consolidation_sources_required}
   end
 
   defp normalize_item(item) do
     %{
-      categories: item["categories"], description: item["description"],
-      owner: item["owner"], deadline: parse_deadline(item["deadline"]),
-      confidence: item["confidence"], uncertainties: %{"items" => item["uncertainties"] || []},
+      categories: item["categories"],
+      description: item["description"],
+      owner: item["owner"],
+      deadline: parse_deadline(item["deadline"]),
+      confidence: item["confidence"],
+      uncertainties: %{"items" => item["uncertainties"] || []},
       evidence_quotes: item["evidence_quotes"] || [],
       source_extraction_indexes: item["source_extraction_indexes"] || []
     }
@@ -127,12 +147,14 @@ defmodule TraceMeet.AI.GroqProvider do
   defp valid_date?(_), do: false
 
   defp parse_deadline(nil), do: nil
+
   defp parse_deadline(value) when is_binary(value) do
     case Date.from_iso8601(value) do
       {:ok, date} -> date
       _ -> nil
     end
   end
+
   defp parse_deadline(_), do: nil
 
   defp api_key do

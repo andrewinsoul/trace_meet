@@ -28,11 +28,6 @@ COPY . .
 RUN mix deps.get --only "$MIX_ENV" \
     && mix deps.compile \
     && mix compile \
-    && mkdir -p priv/tiktokenex/ranks \
-    && curl -fL https://openaipublic.blob.core.windows.net/encodings/cl100k_base.tiktoken \
-      -o priv/tiktokenex/ranks/cl100k_base.tiktoken \
-    && curl -fL https://openaipublic.blob.core.windows.net/encodings/o200k_base.tiktoken \
-      -o priv/tiktokenex/ranks/o200k_base.tiktoken \
     && mix tokenizer.install \
     && mix assets.deploy \
     && mix release trace_meet

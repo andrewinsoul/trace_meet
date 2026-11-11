@@ -115,7 +115,16 @@ defmodule TraceMeetWeb.PreferencesLive.Index do
         <section class="rounded-2xl border border-[#E5EBE6] bg-white p-5 sm:p-7">
           <div class="flex items-start gap-3 border-b border-[#EEF2EF] pb-5">
             <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#EAF5EE] text-[#087C43]">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5" aria-hidden="true">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                class="h-5 w-5"
+                aria-hidden="true"
+              >
                 <circle cx="12" cy="12" r="9" />
                 <path d="M3 12h18M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18" />
               </svg>
@@ -211,7 +220,8 @@ defmodule TraceMeetWeb.PreferencesLive.Index do
 
             <div class="mt-6 flex flex-col-reverse gap-3 border-t border-[#EEF2EF] pt-5 sm:flex-row sm:items-center sm:justify-between">
               <p class="text-xs text-[#87938A]">
-                Selected timezone: <span class="font-medium text-[#526057]">{@selected_time_zone}</span>
+                Selected timezone:
+                <span class="font-medium text-[#526057]">{@selected_time_zone}</span>
               </p>
               <button
                 type="submit"
@@ -226,7 +236,16 @@ defmodule TraceMeetWeb.PreferencesLive.Index do
 
         <aside class="h-fit rounded-2xl border border-[#E5EBE6] bg-white p-5">
           <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-[#F0F4F1] text-[#526057]">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5" aria-hidden="true">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              class="h-5 w-5"
+              aria-hidden="true"
+            >
               <circle cx="12" cy="12" r="9" />
               <path d="M12 7v5l3 2" />
             </svg>

@@ -121,9 +121,7 @@ defmodule TraceMeet.Accounts do
   def generate_user_session_token(%User{} = user) do
     {:ok, token} =
       Repo.transaction(fn ->
-        Repo.one!(
-          from(u in User, where: u.id == ^user.id, lock: "FOR UPDATE")
-        )
+        Repo.one!(from(u in User, where: u.id == ^user.id, lock: "FOR UPDATE"))
 
         from(t in UserToken,
           where: t.user_id == ^user.id and t.context == "session"

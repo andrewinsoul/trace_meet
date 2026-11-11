@@ -1,5 +1,4 @@
 defmodule TraceMeetWeb.ConnCase do
-
   use ExUnit.CaseTemplate
 
   using do

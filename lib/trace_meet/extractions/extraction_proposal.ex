@@ -3,7 +3,12 @@ defmodule TraceMeet.Extractions.ExtractionProposal do
   import Ecto.Changeset
 
   alias TraceMeet.ProcessingRuns.ProcessingRun
-  alias TraceMeet.Extractions.{ExtractionProposalReview, ExtractionProposalSource, ExtractionProposalEvidence}
+
+  alias TraceMeet.Extractions.{
+    ExtractionProposalReview,
+    ExtractionProposalSource,
+    ExtractionProposalEvidence
+  }
 
   @primary_key {:id, :binary_id, autogenerate: true}
   @foreign_key_type :binary_id
@@ -33,13 +38,37 @@ defmodule TraceMeet.Extractions.ExtractionProposal do
 
   def changeset(proposal, attrs) do
     proposal
-    |> cast(attrs, [:fingerprint, :category, :categories, :uncertainties, :title, :description, :owner, :due_date, :confidence, :status, :evidence, :reviewed_at, :rejection_reason])
+    |> cast(attrs, [
+      :fingerprint,
+      :category,
+      :categories,
+      :uncertainties,
+      :title,
+      :description,
+      :owner,
+      :due_date,
+      :confidence,
+      :status,
+      :evidence,
+      :reviewed_at,
+      :rejection_reason
+    ])
     |> put_categories_fallback()
-    |> validate_required([:processing_run_id, :fingerprint, :category, :title, :description, :status, :evidence])
+    |> validate_required([
+      :processing_run_id,
+      :fingerprint,
+      :category,
+      :title,
+      :description,
+      :status,
+      :evidence
+    ])
     |> validate_inclusion(:category, @categories)
     |> validate_length(:categories, min: 1)
     |> validate_change(:categories, fn :categories, values ->
-      if Enum.all?(values, &(&1 in @categories)), do: [], else: [categories: "contains an unsupported category"]
+      if Enum.all?(values, &(&1 in @categories)),
+        do: [],
+        else: [categories: "contains an unsupported category"]
     end)
     |> validate_rejection_reason()
     |> validate_inclusion(:status, @statuses)

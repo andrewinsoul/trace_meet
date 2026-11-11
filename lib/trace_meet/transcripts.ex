@@ -74,7 +74,8 @@ defmodule TraceMeet.Transcripts do
     with %Meeting{status: "completed"} <- get_owned_meeting(advisor_id, meeting_id),
          %Transcript{} = transcript <- get_transcript(advisor_id, meeting_id, transcript_id) do
       Multi.new()
-      |> Multi.update_all(:clear_selection,
+      |> Multi.update_all(
+        :clear_selection,
         from(t in Transcript,
           where: t.meeting_id == ^meeting_id and t.advisor_id == ^advisor_id
         ),

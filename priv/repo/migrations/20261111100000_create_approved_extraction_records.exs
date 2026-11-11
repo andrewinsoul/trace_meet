@@ -8,10 +8,16 @@ defmodule TraceMeet.Repo.Migrations.CreateApprovedExtractionRecords do
       create table(table, primary_key: false) do
         add :id, :binary_id, primary_key: true
         add :advisor_id, references(:users, type: :binary_id, on_delete: :delete_all), null: false
-        add :client_id, references(:clients, type: :binary_id, on_delete: :delete_all), null: false
-        add :meeting_id, references(:meetings, type: :binary_id, on_delete: :delete_all), null: false
+
+        add :client_id, references(:clients, type: :binary_id, on_delete: :delete_all),
+          null: false
+
+        add :meeting_id, references(:meetings, type: :binary_id, on_delete: :delete_all),
+          null: false
+
         add :extraction_proposal_id,
             references(:extraction_proposals, type: :binary_id, on_delete: :restrict), null: false
+
         add :title, :string, null: false
         add :description, :text, null: false
         add :owner, :string

@@ -15,9 +15,11 @@ defmodule TraceMeet.Application do
       {Oban, Application.fetch_env!(:trace_meet, Oban)},
       TraceMeetWeb.Endpoint
     ]
+
     opts = [strategy: :one_for_one, name: TraceMeet.Supervisor]
     Supervisor.start_link(children, opts)
   end
+
   @impl true
   def config_change(changed, _new, removed) do
     TraceMeetWeb.Endpoint.config_change(changed, removed)

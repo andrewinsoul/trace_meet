@@ -9,7 +9,13 @@ defmodule TraceMeet.Clients do
 
   def list_clients(user_id, opts \\ []) do
     page = opts |> Keyword.get(:page, 1) |> positive_integer(1)
-    per_page = opts |> Keyword.get(:per_page, @default_page_size) |> positive_integer(@default_page_size) |> min(@max_page_size)
+
+    per_page =
+      opts
+      |> Keyword.get(:per_page, @default_page_size)
+      |> positive_integer(@default_page_size)
+      |> min(@max_page_size)
+
     search = opts |> Keyword.get(:search, "") |> String.trim()
 
     query =

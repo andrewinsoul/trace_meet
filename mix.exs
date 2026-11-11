@@ -11,7 +11,12 @@ defmodule TraceMeet.MixProject do
       aliases: aliases(),
       deps: deps(),
       compilers: [:phoenix_live_view] ++ Mix.compilers(),
-      listeners: [Phoenix.CodeReloader]
+      listeners: [Phoenix.CodeReloader],
+      releases: [
+        trace_meet: [
+          applications: [runtime_tools: :permanent]
+        ]
+      ]
     ]
   end
 
@@ -39,7 +44,13 @@ defmodule TraceMeet.MixProject do
       {:phoenix_live_dashboard, "~> 0.8.3"},
       {:esbuild, "~> 0.10", runtime: Mix.env() == :dev},
       {:tailwind, "~> 0.3", runtime: Mix.env() == :dev},
-      {:heroicons, github: "tailwindlabs/heroicons", tag: "v2.2.0", sparse: "optimized", app: false, compile: false, depth: 1},
+      {:heroicons,
+       github: "tailwindlabs/heroicons",
+       tag: "v2.2.0",
+       sparse: "optimized",
+       app: false,
+       compile: false,
+       depth: 1},
       {:swoosh, "~> 1.16"},
       {:req, "~> 0.5"},
       {:oban, "~> 2.19"},
@@ -58,13 +69,16 @@ defmodule TraceMeet.MixProject do
   defp aliases do
     [
       setup: ["deps.get", "tokenizer.install", "ecto.setup", "assets.setup", "assets.build"],
-      release: ["tokenizer.install", "release"],
       "ecto.setup": ["ecto.create", "ecto.migrate", "run priv/repo/seeds.exs"],
       "ecto.reset": ["ecto.drop", "ecto.setup"],
       test: ["ecto.create --quiet", "ecto.migrate --quiet", "test"],
       "assets.setup": ["tailwind.install --if-missing", "esbuild.install --if-missing"],
       "assets.build": ["compile", "tailwind trace_meet", "esbuild trace_meet"],
-      "assets.deploy": ["tailwind trace_meet --minify", "esbuild trace_meet --minify", "phx.digest"],
+      "assets.deploy": [
+        "tailwind trace_meet --minify",
+        "esbuild trace_meet --minify",
+        "phx.digest"
+      ],
       precommit: ["compile --warnings-as-errors", "deps.unlock --unused", "format", "test"]
     ]
   end

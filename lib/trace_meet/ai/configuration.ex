@@ -57,7 +57,9 @@ defmodule TraceMeet.AI.Configuration do
 
   def set_default(advisor_id, prompt_id) do
     case get_advisor_prompt(advisor_id, prompt_id) do
-      nil -> {:error, :not_found}
+      nil ->
+        {:error, :not_found}
+
       prompt ->
         Repo.transaction(fn ->
           clear_default(advisor_id, prompt.id)
@@ -75,7 +77,9 @@ defmodule TraceMeet.AI.Configuration do
       )
 
     case prompt do
-      nil -> nil
+      nil ->
+        nil
+
       prompt ->
         %{
           id: prompt.id,
@@ -93,8 +97,14 @@ defmodule TraceMeet.AI.Configuration do
         on: v.guardrail_id == g.id and v.version == g.active_version,
         where: g.active_version > 0 and (g.scope == "global" or g.meeting_type == ^meeting_type),
         order_by: g.key,
-        select: %{id: g.id, key: g.key, version: v.version,
-          name: g.name, instruction: v.instruction, sha256: v.sha256}
+        select: %{
+          id: g.id,
+          key: g.key,
+          version: v.version,
+          name: g.name,
+          instruction: v.instruction,
+          sha256: v.sha256
+        }
       )
     )
   end

@@ -17,7 +17,9 @@ defmodule TraceMeet.Extractions.ExtractionProposalSource do
     source
     |> cast(attrs, [])
     |> validate_required([:extraction_proposal_id, :chunk_extraction_id])
-    |> unique_constraint([:extraction_proposal_id, :chunk_extraction_id], name: :extraction_proposal_sources_unique_index)
+    |> unique_constraint([:extraction_proposal_id, :chunk_extraction_id],
+      name: :extraction_proposal_sources_unique_index
+    )
     |> foreign_key_constraint(:extraction_proposal_id)
     |> foreign_key_constraint(:chunk_extraction_id)
   end

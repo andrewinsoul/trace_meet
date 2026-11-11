@@ -15,19 +15,25 @@ defmodule TraceMeet.ProcessingRuns.Chunks do
 
         _run ->
           existing =
-        repo.all(
-          from(c in ProcessingRunChunk,
-            where: c.processing_run_id == ^run.id,
-            order_by: c.sequence
-          )
-        )
+            repo.all(
+              from(c in ProcessingRunChunk,
+                where: c.processing_run_id == ^run.id,
+                order_by: c.sequence
+              )
+            )
 
           if existing != [] do
             {:ok, existing}
           else
-            Enum.reduce_while(Enum.with_index(chunks, 1), {:ok, []}, fn {attrs, sequence}, {:ok, acc} ->
+            Enum.reduce_while(Enum.with_index(chunks, 1), {:ok, []}, fn {attrs, sequence},
+                                                                        {:ok, acc} ->
               attrs = Map.put(attrs, :sequence, sequence)
-              changeset = ProcessingRunChunk.changeset(%ProcessingRunChunk{processing_run_id: run.id}, attrs)
+
+              changeset =
+                ProcessingRunChunk.changeset(
+                  %ProcessingRunChunk{processing_run_id: run.id},
+                  attrs
+                )
 
               case repo.insert(changeset) do
                 {:ok, chunk} -> {:cont, {:ok, [chunk | acc]}}
@@ -96,7 +102,10 @@ defmodule TraceMeet.ProcessingRuns.Chunks do
 
   def mark_failed(%ProcessingRunChunk{}, _reason), do: {:error, :invalid_chunk_transition}
 
-  def save_extraction_result(%ProcessingRunChunk{status: status} = chunk, %{items: items} = result)
+  def save_extraction_result(
+        %ProcessingRunChunk{status: status} = chunk,
+        %{items: items} = result
+      )
       when status in ["processing", "failed"] and is_list(items) do
     Multi.new()
     |> Multi.run(:clear_previous, fn repo, _changes ->
@@ -105,7 +114,9 @@ defmodule TraceMeet.ProcessingRuns.Chunks do
     end)
     |> Multi.run(:extractions, fn repo, _changes ->
       Enum.reduce_while(items, {:ok, []}, fn attrs, {:ok, acc} ->
-        changeset = ChunkExtraction.changeset(%ChunkExtraction{processing_run_chunk_id: chunk.id}, attrs)
+        changeset =
+          ChunkExtraction.changeset(%ChunkExtraction{processing_run_chunk_id: chunk.id}, attrs)
+
         case repo.insert(changeset) do
           {:ok, extraction} -> {:cont, {:ok, [extraction | acc]}}
           {:error, reason} -> {:halt, {:error, reason}}
@@ -116,10 +127,15 @@ defmodule TraceMeet.ProcessingRuns.Chunks do
         error -> error
       end
     end)
-    |> Multi.update(:chunk, ProcessingRunChunk.changeset(chunk, %{
-      status: "completed", extraction_result: result, error_message: nil,
-      completed_at: DateTime.utc_now()
-    }))
+    |> Multi.update(
+      :chunk,
+      ProcessingRunChunk.changeset(chunk, %{
+        status: "completed",
+        extraction_result: result,
+        error_message: nil,
+        completed_at: DateTime.utc_now()
+      })
+    )
     |> Repo.transaction()
     |> case do
       {:ok, %{chunk: updated}} -> {:ok, updated}
@@ -127,12 +143,14 @@ defmodule TraceMeet.ProcessingRuns.Chunks do
     end
   end
 
-  def save_extraction_result(%ProcessingRunChunk{}, _result), do: {:error, :invalid_chunk_transition}
+  def save_extraction_result(%ProcessingRunChunk{}, _result),
+    do: {:error, :invalid_chunk_transition}
 
   def list_extractions_for_run(run_id) do
     Repo.all(
       from(e in ChunkExtraction,
-        join: c in ProcessingRunChunk, on: c.id == e.processing_run_chunk_id,
+        join: c in ProcessingRunChunk,
+        on: c.id == e.processing_run_chunk_id,
         where: c.processing_run_id == ^run_id,
         order_by: [asc: c.sequence, asc: e.inserted_at]
       )

@@ -23,7 +23,7 @@ defmodule TraceMeet.Repo.Migrations.CreateMeetings do
     create index(:meetings, [:user_id, :archived_at])
 
     create constraint(:meetings, :meetings_status_check,
-      check: "status IN ('scheduled', 'in_progress', 'completed', 'cancelled')"
-    )
+             check: "status IN ('scheduled', 'in_progress', 'completed', 'cancelled')"
+           )
   end
 end

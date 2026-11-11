@@ -138,34 +138,62 @@ defmodule TraceMeetWeb.MeetingLive.Form do
     <Layouts.workspace flash={@flash} current_user={@current_user} active_page={:meetings}>
       <div class="mx-auto max-w-3xl">
         <div class="mb-8">
-          <.link navigate={back_path(@selected_client_id)} class="text-sm font-medium text-[#68756C] hover:text-[#087C43]">
+          <.link
+            navigate={back_path(@selected_client_id)}
+            class="text-sm font-medium text-[#68756C] hover:text-[#087C43]"
+          >
             ← Back
           </.link>
           <p class="mt-6 text-sm font-medium tracking-wide text-[#087C43]">CLIENT CONVERSATIONS</p>
-          <h1 class="mt-2 text-2xl font-semibold tracking-tight text-[#17231C] sm:text-3xl">{@page_title}</h1>
+          <h1 class="mt-2 text-2xl font-semibold tracking-tight text-[#17231C] sm:text-3xl">
+            {@page_title}
+          </h1>
           <p class="mt-2 text-sm leading-6 text-[#68756C]">
             Schedule a future conversation or record one that has already happened. A transcript can be added later.
           </p>
         </div>
 
         <section class="w-full rounded-2xl border border-[#E5EBE6] bg-white p-5 shadow-sm sm:p-8">
-          <.form for={@form} id="meeting-form" phx-change="validate" phx-submit="save" class="space-y-6">
-            <input type="hidden" name="meeting[time_zone]" value={@current_user.time_zone || "Etc/UTC"} />
+          <.form
+            for={@form}
+            id="meeting-form"
+            phx-change="validate"
+            phx-submit="save"
+            class="space-y-6"
+          >
+            <input
+              type="hidden"
+              name="meeting[time_zone]"
+              value={@current_user.time_zone || "Etc/UTC"}
+            />
             <div :if={@live_action == :new} class="space-y-2">
-              <label for="meeting-client-search" class="block text-sm font-medium text-[#26352B]">Client</label>
+              <label for="meeting-client-search" class="block text-sm font-medium text-[#26352B]">
+                Client
+              </label>
               <input
                 type="hidden"
                 name="meeting[client_id]"
                 value={@selected_client_id || ""}
               />
-              <div :if={@selected_client && !@client_selector_open} class="flex items-center justify-between gap-3 rounded-lg border border-[#DCE5DE] bg-[#F8FBF8] px-3.5 py-3">
+              <div
+                :if={@selected_client && !@client_selector_open}
+                class="flex items-center justify-between gap-3 rounded-lg border border-[#DCE5DE] bg-[#F8FBF8] px-3.5 py-3"
+              >
                 <div class="min-w-0">
                   <p class="truncate text-sm font-semibold text-[#17231C]">{@selected_client.name}</p>
-                  <p :if={@selected_client.email || @selected_client.company} class="mt-0.5 truncate text-xs text-[#748178]">
-                    {Enum.filter([@selected_client.email, @selected_client.company], & &1) |> Enum.join(" · ")}
+                  <p
+                    :if={@selected_client.email || @selected_client.company}
+                    class="mt-0.5 truncate text-xs text-[#748178]"
+                  >
+                    {Enum.filter([@selected_client.email, @selected_client.company], & &1)
+                    |> Enum.join(" · ")}
                   </p>
                 </div>
-                <button type="button" phx-click="change_client" class="shrink-0 text-sm font-semibold text-[#087C43] hover:text-[#066B39]">
+                <button
+                  type="button"
+                  phx-click="change_client"
+                  class="shrink-0 text-sm font-semibold text-[#087C43] hover:text-[#066B39]"
+                >
                   Change
                 </button>
               </div>
@@ -181,13 +209,22 @@ defmodule TraceMeetWeb.MeetingLive.Form do
                   phx-debounce="250"
                   class="w-full rounded-lg border border-[#DCE5DE] bg-white px-3.5 py-3 text-sm text-[#17231C] outline-none transition placeholder:text-[#9AA69D] focus:border-[#087C43] focus:ring-4 focus:ring-[#087C43]/10"
                 />
-                <div :if={String.length(String.trim(@client_search)) < 2} class="rounded-lg border border-dashed border-[#DCE5DE] px-3.5 py-3 text-xs text-[#87938A]">
+                <div
+                  :if={String.length(String.trim(@client_search)) < 2}
+                  class="rounded-lg border border-dashed border-[#DCE5DE] px-3.5 py-3 text-xs text-[#87938A]"
+                >
                   Type at least two characters to search your clients.
                 </div>
-                <div :if={String.length(String.trim(@client_search)) >= 2 && @client_results == []} class="rounded-lg border border-[#E5EBE6] px-3.5 py-3 text-sm text-[#748178]">
+                <div
+                  :if={String.length(String.trim(@client_search)) >= 2 && @client_results == []}
+                  class="rounded-lg border border-[#E5EBE6] px-3.5 py-3 text-sm text-[#748178]"
+                >
                   No matching clients found.
                 </div>
-                <div :if={@client_results != []} class="max-h-60 overflow-y-auto rounded-lg border border-[#E5EBE6] bg-white shadow-lg">
+                <div
+                  :if={@client_results != []}
+                  class="max-h-60 overflow-y-auto rounded-lg border border-[#E5EBE6] bg-white shadow-lg"
+                >
                   <button
                     :for={client <- @client_results}
                     type="button"
@@ -196,8 +233,13 @@ defmodule TraceMeetWeb.MeetingLive.Form do
                     class="flex w-full items-center justify-between gap-3 border-b border-[#EEF2EF] px-3.5 py-3 text-left last:border-0 hover:bg-[#F5F9F6] focus:bg-[#F5F9F6] focus:outline-none"
                   >
                     <span class="min-w-0">
-                      <span class="block truncate text-sm font-medium text-[#26352B]">{client.name}</span>
-                      <span :if={client.email || client.company} class="mt-0.5 block truncate text-xs text-[#87938A]">
+                      <span class="block truncate text-sm font-medium text-[#26352B]">
+                        {client.name}
+                      </span>
+                      <span
+                        :if={client.email || client.company}
+                        class="mt-0.5 block truncate text-xs text-[#87938A]"
+                      >
                         {Enum.filter([client.email, client.company], & &1) |> Enum.join(" · ")}
                       </span>
                     </span>
@@ -209,24 +251,53 @@ defmodule TraceMeetWeb.MeetingLive.Form do
 
             <div>
               <h2 class="text-base font-semibold text-[#26352B]">Meeting details</h2>
-              <p class="mt-1 text-xs text-[#87938A]">Choose whether this is planned or already happened.</p>
+              <p class="mt-1 text-xs text-[#87938A]">
+                Choose whether this is planned or already happened.
+              </p>
             </div>
-            <.input field={@form[:title]} label="Meeting title" placeholder="e.g. Quarterly business review" required />
-            <.textarea field={@form[:description]} label="Agenda or notes" placeholder="What will you discuss? Add context if the meeting has already happened." rows={4} />
+            <.input
+              field={@form[:title]}
+              label="Meeting title"
+              placeholder="e.g. Quarterly business review"
+              required
+            />
+            <.textarea
+              field={@form[:description]}
+              label="Agenda or notes"
+              placeholder="What will you discuss? Add context if the meeting has already happened."
+              rows={4}
+            />
             <div>
-              <label for="meeting-type" class="mb-1.5 block text-sm font-medium text-[#26352B]">Meeting type</label>
-              <select id="meeting-type" name="meeting[meeting_type]" phx-change="validate" class="block w-full rounded-lg border border-[#DCE5DE] bg-white px-3.5 py-3 text-sm text-[#17231C] outline-none focus:border-[#087C43] focus:ring-4 focus:ring-[#087C43]/10">
-                <option :for={{label, value} <- @meeting_types} value={value} selected={@form[:meeting_type].value == value}>{label}</option>
+              <label for="meeting-type" class="mb-1.5 block text-sm font-medium text-[#26352B]">
+                Meeting type
+              </label>
+              <select
+                id="meeting-type"
+                name="meeting[meeting_type]"
+                phx-change="validate"
+                class="block w-full rounded-lg border border-[#DCE5DE] bg-white px-3.5 py-3 text-sm text-[#17231C] outline-none focus:border-[#087C43] focus:ring-4 focus:ring-[#087C43]/10"
+              >
+                <option
+                  :for={{label, value} <- @meeting_types}
+                  value={value}
+                  selected={@form[:meeting_type].value == value}
+                >
+                  {label}
+                </option>
               </select>
               <div :if={@form[:meeting_type].value == "other"} class="mt-3">
-                <label class="mb-1.5 block text-sm font-medium text-[#26352B]">Specify meeting type</label>
+                <label class="mb-1.5 block text-sm font-medium text-[#26352B]">
+                  Specify meeting type
+                </label>
                 <.input field={@form[:other_meeting_type]} placeholder="e.g. Regulatory compliance" />
               </div>
             </div>
             <div class="grid gap-5 sm:grid-cols-2">
               <.input field={@form[:meeting_at]} type="datetime-local" label="Meeting date and time" />
               <div class="space-y-1.5">
-                <label for="meeting-status" class="block text-sm font-medium text-[#26352B]">Meeting status</label>
+                <label for="meeting-status" class="block text-sm font-medium text-[#26352B]">
+                  Meeting status
+                </label>
                 <select
                   id="meeting-status"
                   name="meeting[status]"
@@ -234,16 +305,31 @@ defmodule TraceMeetWeb.MeetingLive.Form do
                   aria-describedby={if @form[:status].errors != [], do: "meeting-status-errors"}
                   class={[
                     "block w-full rounded-lg border bg-white px-3.5 py-3 text-sm text-[#17231C] outline-none focus:ring-4",
-                    @form[:status].errors == [] && "border-[#DCE5DE] focus:border-[#087C43] focus:ring-[#087C43]/10",
-                    @form[:status].errors != [] && "border-red-500 focus:border-red-500 focus:ring-red-500/10"
+                    @form[:status].errors == [] &&
+                      "border-[#DCE5DE] focus:border-[#087C43] focus:ring-[#087C43]/10",
+                    @form[:status].errors != [] &&
+                      "border-red-500 focus:border-red-500 focus:ring-red-500/10"
                   ]}
                 >
-                  <option value="scheduled" selected={@form[:status].value == "scheduled"}>Scheduled</option>
-                  <option value="in_progress" selected={@form[:status].value == "in_progress"}>In progress</option>
-                  <option value="completed" selected={@form[:status].value == "completed"}>Completed (already happened)</option>
-                  <option value="cancelled" selected={@form[:status].value == "cancelled"}>Cancelled</option>
+                  <option value="scheduled" selected={@form[:status].value == "scheduled"}>
+                    Scheduled
+                  </option>
+                  <option value="in_progress" selected={@form[:status].value == "in_progress"}>
+                    In progress
+                  </option>
+                  <option value="completed" selected={@form[:status].value == "completed"}>
+                    Completed (already happened)
+                  </option>
+                  <option value="cancelled" selected={@form[:status].value == "cancelled"}>
+                    Cancelled
+                  </option>
                 </select>
-                <div :if={@form[:status].errors != []} id="meeting-status-errors" class="mt-1 space-y-1" role="alert">
+                <div
+                  :if={@form[:status].errors != []}
+                  id="meeting-status-errors"
+                  class="mt-1 space-y-1"
+                  role="alert"
+                >
                   <p :for={{message, _opts} <- @form[:status].errors} class="text-sm text-red-600">
                     {message}
                   </p>
@@ -254,7 +340,12 @@ defmodule TraceMeetWeb.MeetingLive.Form do
               The status is suggested from the selected date and time: future meetings are scheduled, while past meetings are completed. You can change it manually when needed.
             </p>
             <div class="flex flex-col-reverse gap-3 border-t border-[#EEF2EF] pt-5 sm:flex-row sm:justify-end">
-              <.link navigate={back_path(@selected_client_id)} class="inline-flex items-center justify-center rounded-lg border border-[#DCE5DE] bg-white px-4 py-2.5 text-sm font-semibold text-[#526057] transition hover:bg-[#F5F8F5]">Cancel</.link>
+              <.link
+                navigate={back_path(@selected_client_id)}
+                class="inline-flex items-center justify-center rounded-lg border border-[#DCE5DE] bg-white px-4 py-2.5 text-sm font-semibold text-[#526057] transition hover:bg-[#F5F8F5]"
+              >
+                Cancel
+              </.link>
               <.button
                 type="submit"
                 class="sm:w-auto"
@@ -293,7 +384,13 @@ defmodule TraceMeetWeb.MeetingLive.Form do
       {:ok, _meeting} ->
         {:noreply,
          socket
-         |> put_flash(:info, if(socket.assigns.live_action == :new, do: "Meeting created.", else: "Meeting updated."))
+         |> put_flash(
+           :info,
+           if(socket.assigns.live_action == :new,
+             do: "Meeting created.",
+             else: "Meeting updated."
+           )
+         )
          |> push_navigate(to: ~p"/meetings")}
 
       {:error, :client_not_found} ->

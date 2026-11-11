@@ -180,7 +180,8 @@ defmodule TraceMeetWeb.MeetingLive.Show do
             {:noreply, put_flash(socket, :info, "Transcript processing completed successfully.")}
 
           :failed ->
-            {:noreply, put_flash(socket, :error, "Transcript processing failed. You can start a new run.")}
+            {:noreply,
+             put_flash(socket, :error, "Transcript processing failed. You can start a new run.")}
 
           _ ->
             {:noreply, socket}
@@ -334,63 +335,63 @@ defmodule TraceMeetWeb.MeetingLive.Show do
               <section class="mt-5 rounded-xl border border-[#E5EBE6] bg-white">
                 <div class="border-t border-[#EEF2EF] p-4">
                   <div class="grid gap-6 lg:grid-cols-2">
-                <.form
-                  for={%{}}
-                  as={:transcript}
-                  id="transcript-paste-form"
-                  phx-submit="save_transcript"
-                  class="space-y-3"
-                >
-                  <label for="transcript-content" class="block text-sm font-medium text-[#26352B]">
-                    Paste transcript
-                  </label>
-                  <textarea
-                    id="transcript-content"
-                    name="transcript[content]"
-                    rows="8"
-                    required
-                    maxlength="2000000"
-                    placeholder="Paste the meeting transcript here..."
-                    class="w-full rounded-xl border border-[#DCE5DE] bg-white px-3 py-3 text-sm text-[#26352B] outline-none transition placeholder:text-[#A0AAA3] focus:border-[#087C43] focus:ring-2 focus:ring-[#087C43]/10"
-                  ></textarea>
-                  <button
-                    type="submit"
-                    class="inline-flex items-center rounded-lg bg-[#087C43] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#066A39]"
-                  >
-                    Save transcript
-                  </button>
-                </.form>
-
-                <div class="space-y-3">
-                  <p class="text-sm font-medium text-[#26352B]">Upload transcript file</p>
-                  <.form
-                    for={%{}}
-                    id="transcript-upload-form"
-                    phx-submit="upload_transcript"
-                    phx-change="validate_transcript_upload"
-                    class="rounded-xl border border-dashed border-[#C9D7CC] bg-white p-4"
-                  >
-                    <.live_file_input
-                      upload={@uploads.transcript_upload}
-                      class="block w-full text-sm text-[#526057] file:mr-3 file:rounded-lg file:border-0 file:bg-[#EAF5EE] file:px-3 file:py-2 file:text-sm file:font-semibold file:text-[#087C43]"
-                    />
-                    <p class="mt-2 text-xs text-[#87938A]">
-                      TXT, Markdown, PDF, or DOCX, up to 2 MB.
-                    </p>
-                    <%= for entry <- @uploads.transcript_upload.entries do %>
-                      <p class="mt-2 truncate text-xs text-[#526057]">{entry.client_name}</p>
-                      <%= for err <- upload_errors(@uploads.transcript_upload, entry) do %>
-                        <p class="mt-1 text-xs text-red-600">{upload_error(err)}</p>
-                      <% end %>
-                    <% end %>
-                    <button
-                      type="submit"
-                      class="mt-4 inline-flex items-center rounded-lg border border-[#DCE5DE] bg-white px-4 py-2.5 text-sm font-semibold text-[#26352B] transition hover:bg-[#F5F8F5]"
+                    <.form
+                      for={%{}}
+                      as={:transcript}
+                      id="transcript-paste-form"
+                      phx-submit="save_transcript"
+                      class="space-y-3"
                     >
-                      Upload version
-                    </button>
-                  </.form>
-                </div>
+                      <label for="transcript-content" class="block text-sm font-medium text-[#26352B]">
+                        Paste transcript
+                      </label>
+                      <textarea
+                        id="transcript-content"
+                        name="transcript[content]"
+                        rows="8"
+                        required
+                        maxlength="2000000"
+                        placeholder="Paste the meeting transcript here..."
+                        class="w-full rounded-xl border border-[#DCE5DE] bg-white px-3 py-3 text-sm text-[#26352B] outline-none transition placeholder:text-[#A0AAA3] focus:border-[#087C43] focus:ring-2 focus:ring-[#087C43]/10"
+                      ></textarea>
+                      <button
+                        type="submit"
+                        class="inline-flex items-center rounded-lg bg-[#087C43] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#066A39]"
+                      >
+                        Save transcript
+                      </button>
+                    </.form>
+
+                    <div class="space-y-3">
+                      <p class="text-sm font-medium text-[#26352B]">Upload transcript file</p>
+                      <.form
+                        for={%{}}
+                        id="transcript-upload-form"
+                        phx-submit="upload_transcript"
+                        phx-change="validate_transcript_upload"
+                        class="rounded-xl border border-dashed border-[#C9D7CC] bg-white p-4"
+                      >
+                        <.live_file_input
+                          upload={@uploads.transcript_upload}
+                          class="block w-full text-sm text-[#526057] file:mr-3 file:rounded-lg file:border-0 file:bg-[#EAF5EE] file:px-3 file:py-2 file:text-sm file:font-semibold file:text-[#087C43]"
+                        />
+                        <p class="mt-2 text-xs text-[#87938A]">
+                          TXT, Markdown, PDF, or DOCX, up to 2 MB.
+                        </p>
+                        <%= for entry <- @uploads.transcript_upload.entries do %>
+                          <p class="mt-2 truncate text-xs text-[#526057]">{entry.client_name}</p>
+                          <%= for err <- upload_errors(@uploads.transcript_upload, entry) do %>
+                            <p class="mt-1 text-xs text-red-600">{upload_error(err)}</p>
+                          <% end %>
+                        <% end %>
+                        <button
+                          type="submit"
+                          class="mt-4 inline-flex items-center rounded-lg border border-[#DCE5DE] bg-white px-4 py-2.5 text-sm font-semibold text-[#26352B] transition hover:bg-[#F5F8F5]"
+                        >
+                          Upload version
+                        </button>
+                      </.form>
+                    </div>
                   </div>
                 </div>
               </section>
@@ -407,7 +408,9 @@ defmodule TraceMeetWeb.MeetingLive.Show do
                     <p class="text-xs font-semibold uppercase tracking-wide text-[#087C43]">
                       Selected transcript · Version {@selected_transcript.version}
                     </p>
-                    <p class="mt-1 text-xs text-[#526057]">{transcript_source(@selected_transcript)}</p>
+                    <p class="mt-1 text-xs text-[#526057]">
+                      {transcript_source(@selected_transcript)}
+                    </p>
                     <p class="mt-2 max-w-2xl text-xs leading-5 text-[#526057]">
                       Prepare this transcript to identify decisions, action items, commitments, risks, blockers, and unresolved questions for your review.
                     </p>
@@ -461,7 +464,9 @@ defmodule TraceMeetWeb.MeetingLive.Show do
                       <span class="text-[#526057]">
                         Run created {Calendar.strftime(run.inserted_at, "%b %d, %Y %I:%M %p UTC")}
                       </span>
-                      <span class="font-semibold text-[#26352B]">{processing_status(run.status)}</span>
+                      <span class="font-semibold text-[#26352B]">
+                        {processing_status(run.status)}
+                      </span>
                     </div>
                     <p class="text-[11px] text-[#87938A]">
                       Advisor prompt · Model {run.model}
@@ -485,31 +490,31 @@ defmodule TraceMeetWeb.MeetingLive.Show do
                   </span>
                 </summary>
                 <div class="divide-y divide-[#EEF2EF] border-t border-[#EEF2EF]">
-                <%= for transcript <- @transcripts do %>
-                  <div class="flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-                    <div>
-                      <p class="text-sm font-medium text-[#26352B]">Version {transcript.version}</p>
-                      <p class="mt-1 text-xs text-[#87938A]">
-                        {transcript_source(transcript)} · Added {Calendar.strftime(
-                          transcript.inserted_at,
-                          "%b %d, %Y %I:%M %p UTC"
-                        )}
-                      </p>
+                  <%= for transcript <- @transcripts do %>
+                    <div class="flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+                      <div>
+                        <p class="text-sm font-medium text-[#26352B]">Version {transcript.version}</p>
+                        <p class="mt-1 text-xs text-[#87938A]">
+                          {transcript_source(transcript)} · Added {Calendar.strftime(
+                            transcript.inserted_at,
+                            "%b %d, %Y %I:%M %p UTC"
+                          )}
+                        </p>
+                      </div>
+                      <%= if is_nil(transcript.selected_at) do %>
+                        <button
+                          type="button"
+                          phx-click="select_transcript"
+                          phx-value-id={transcript.id}
+                          class="inline-flex w-fit items-center rounded-lg border border-[#DCE5DE] px-3 py-2 text-xs font-semibold text-[#526057] transition hover:bg-[#F5F8F5]"
+                        >
+                          Select version
+                        </button>
+                      <% else %>
+                        <span class="text-xs font-semibold text-[#087C43]">Currently selected</span>
+                      <% end %>
                     </div>
-                    <%= if is_nil(transcript.selected_at) do %>
-                      <button
-                        type="button"
-                        phx-click="select_transcript"
-                        phx-value-id={transcript.id}
-                        class="inline-flex w-fit items-center rounded-lg border border-[#DCE5DE] px-3 py-2 text-xs font-semibold text-[#526057] transition hover:bg-[#F5F8F5]"
-                      >
-                        Select version
-                      </button>
-                    <% else %>
-                      <span class="text-xs font-semibold text-[#087C43]">Currently selected</span>
-                    <% end %>
-                  </div>
-                <% end %>
+                  <% end %>
                 </div>
               </details>
             <% end %>
@@ -600,7 +605,8 @@ defmodule TraceMeetWeb.MeetingLive.Show do
     do: "This file type isn't supported. Upload a TXT, Markdown, PDF, or DOCX file."
 
   defp upload_transcript_error(:no_extractable_text),
-    do: "We couldn't find readable text in this file. Scanned PDFs and image-only documents aren't supported yet."
+    do:
+      "We couldn't find readable text in this file. Scanned PDFs and image-only documents aren't supported yet."
 
   defp upload_transcript_error(:extracted_text_too_large),
     do: "The extracted transcript exceeds the 2 MB text limit. Please upload a shorter document."
@@ -612,13 +618,16 @@ defmodule TraceMeetWeb.MeetingLive.Show do
     do: "We couldn't read this Word document. Make sure it is a valid, unprotected DOCX file."
 
   defp upload_transcript_error(:pdf_could_not_be_read),
-    do: "We couldn't read this PDF. It may be damaged, password-protected, or use an unsupported format."
+    do:
+      "We couldn't read this PDF. It may be damaged, password-protected, or use an unsupported format."
 
   defp upload_transcript_error(:invalid_text_encoding),
-    do: "This file contains text in an unsupported encoding. Please save it as UTF-8 and try again."
+    do:
+      "This file contains text in an unsupported encoding. Please save it as UTF-8 and try again."
 
   defp upload_transcript_error(_reason),
-    do: "We couldn't extract text from this file. It may be damaged or use unsupported document features."
+    do:
+      "We couldn't extract text from this file. It may be damaged or use unsupported document features."
 
   defp status_label("in_progress"), do: "In progress"
   defp status_label(status), do: status |> String.replace("_", " ") |> String.capitalize()

@@ -3,6 +3,7 @@ import Config
 config :trace_meet,
   ecto_repos: [TraceMeet.Repo],
   generators: [timestamp_type: :utc_datetime]
+
 config :trace_meet, TraceMeetWeb.Endpoint,
   url: [host: "localhost"],
   adapter: Bandit.PhoenixAdapter,
@@ -12,7 +13,9 @@ config :trace_meet, TraceMeetWeb.Endpoint,
   ],
   pubsub_server: TraceMeet.PubSub,
   live_view: [signing_salt: "iAJaJeai"]
+
 config :trace_meet, TraceMeet.Mailer, adapter: Swoosh.Adapters.Local
+
 config :trace_meet, Oban,
   repo: TraceMeet.Repo,
   queues: [transcript_processing: 2],
@@ -27,6 +30,7 @@ config :trace_meet,
   chunk_max_tokens: 7_000,
   chunk_overlap_tokens: 300,
   consolidation_max_tokens: 12_000
+
 config :esbuild,
   version: "0.25.4",
   trace_meet: [
@@ -35,6 +39,7 @@ config :esbuild,
     cd: Path.expand("../assets", __DIR__),
     env: %{"NODE_PATH" => [Path.expand("../deps", __DIR__), Mix.Project.build_path()]}
   ]
+
 config :tailwind,
   version: "4.1.12",
   trace_meet: [
@@ -44,8 +49,10 @@ config :tailwind,
     ),
     cd: Path.expand("..", __DIR__)
   ]
+
 config :logger, :default_formatter,
   format: "$time $metadata[$level] $message\n",
   metadata: [:request_id]
+
 config :phoenix, :json_library, Jason
 import_config "#{config_env()}.exs"

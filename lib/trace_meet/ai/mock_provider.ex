@@ -41,7 +41,9 @@ defmodule TraceMeet.AI.MockProvider do
             owner: nil,
             deadline: nil,
             confidence: nil,
-            uncertainties: %{"items" => ["Synthetic MockProvider fixture; not a semantic assessment."]},
+            uncertainties: %{
+              "items" => ["Synthetic MockProvider fixture; not a semantic assessment."]
+            },
             evidence_quotes: [quote]
           }
         ]

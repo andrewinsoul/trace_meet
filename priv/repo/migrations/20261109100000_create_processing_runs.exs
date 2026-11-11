@@ -11,7 +11,10 @@ defmodule TraceMeet.Repo.Migrations.CreateProcessingRuns do
       add :completed_at, :utc_datetime_usec
       add :failed_at, :utc_datetime_usec
       add :error_message, :text
-      add :transcript_id, references(:transcripts, type: :binary_id, on_delete: :delete_all), null: false
+
+      add :transcript_id, references(:transcripts, type: :binary_id, on_delete: :delete_all),
+        null: false
+
       add :advisor_id, references(:users, type: :binary_id, on_delete: :delete_all), null: false
       timestamps(type: :utc_datetime_usec)
     end

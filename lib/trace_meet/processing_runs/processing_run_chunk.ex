@@ -30,9 +30,18 @@ defmodule TraceMeet.ProcessingRuns.ProcessingRunChunk do
   def changeset(chunk, attrs) do
     chunk
     |> cast(attrs, [
-      :sequence, :content, :token_count, :attempt_count, :cleaned_start, :cleaned_end,
-      :source_references, :status, :extraction_result, :error_message,
-      :started_at, :completed_at
+      :sequence,
+      :content,
+      :token_count,
+      :attempt_count,
+      :cleaned_start,
+      :cleaned_end,
+      :source_references,
+      :status,
+      :extraction_result,
+      :error_message,
+      :started_at,
+      :completed_at
     ])
     |> validate_required([:processing_run_id, :sequence, :content, :cleaned_start, :cleaned_end])
     |> validate_number(:sequence, greater_than: 0)
@@ -51,6 +60,7 @@ defmodule TraceMeet.ProcessingRuns.ProcessingRunChunk do
     |> unique_constraint([:processing_run_id, :sequence])
     |> foreign_key_constraint(:processing_run_id)
   end
+
   defp validate_offset_order(changeset) do
     start_offset = get_field(changeset, :cleaned_start)
     end_offset = get_field(changeset, :cleaned_end)

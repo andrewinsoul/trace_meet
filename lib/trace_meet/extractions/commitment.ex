@@ -36,7 +36,14 @@ defmodule TraceMeet.Extractions.Commitment do
       :owner,
       :due_date
     ])
-    |> validate_required([:advisor_id, :client_id, :meeting_id, :extraction_proposal_id, :title, :description])
+    |> validate_required([
+      :advisor_id,
+      :client_id,
+      :meeting_id,
+      :extraction_proposal_id,
+      :title,
+      :description
+    ])
     |> validate_length(:title, max: 255)
     |> foreign_key_constraint(:advisor_id)
     |> foreign_key_constraint(:client_id)

@@ -14,7 +14,8 @@ defmodule TraceMeet.Repo.Migrations.AddGuardrailScope do
            )
 
     create constraint(:ai_guardrails, :ai_guardrails_scope_meeting_type_consistency,
-             check: "(scope = 'global' AND meeting_type IS NULL) OR (scope = 'meeting_type' AND meeting_type IS NOT NULL)"
+             check:
+               "(scope = 'global' AND meeting_type IS NULL) OR (scope = 'meeting_type' AND meeting_type IS NOT NULL)"
            )
   end
 end

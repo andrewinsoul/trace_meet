@@ -137,14 +137,34 @@ defmodule TraceMeetWeb.Layouts do
             <details
               id="settings-navigation"
               class="group"
-              open={@active_page in [:settings, :settings_profile, :settings_preferences, :settings_security, :ai_configuration]}
+              open={
+                @active_page in [
+                  :settings,
+                  :settings_profile,
+                  :settings_preferences,
+                  :settings_security,
+                  :ai_configuration
+                ]
+              }
             >
               <summary
                 class={[
                   "flex cursor-pointer list-none items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors [&::-webkit-details-marker]:hidden",
-                  @active_page in [:settings, :settings_profile, :settings_preferences, :settings_security, :ai_configuration] &&
+                  @active_page in [
+                    :settings,
+                    :settings_profile,
+                    :settings_preferences,
+                    :settings_security,
+                    :ai_configuration
+                  ] &&
                     "bg-[#EAF5EE] text-[#087C43]",
-                  @active_page not in [:settings, :settings_profile, :settings_preferences, :settings_security, :ai_configuration] &&
+                  @active_page not in [
+                    :settings,
+                    :settings_profile,
+                    :settings_preferences,
+                    :settings_security,
+                    :ai_configuration
+                  ] &&
                     "text-[#59665D] hover:bg-[#F5F8F5] hover:text-[#17231C]"
                 ]}
                 aria-label="Toggle Settings menu"
@@ -153,9 +173,21 @@ defmodule TraceMeetWeb.Layouts do
                   name="settings"
                   class={[
                     "h-5 w-5 shrink-0",
-                    @active_page in [:settings, :settings_profile, :settings_preferences, :settings_security, :ai_configuration] &&
+                    @active_page in [
+                      :settings,
+                      :settings_profile,
+                      :settings_preferences,
+                      :settings_security,
+                      :ai_configuration
+                    ] &&
                       "text-[#087C43]",
-                    @active_page not in [:settings, :settings_profile, :settings_preferences, :settings_security, :ai_configuration] &&
+                    @active_page not in [
+                      :settings,
+                      :settings_profile,
+                      :settings_preferences,
+                      :settings_security,
+                      :ai_configuration
+                    ] &&
                       "text-[#87938A] group-hover:text-[#526057]"
                   ]}
                 />
@@ -221,8 +253,7 @@ defmodule TraceMeetWeb.Layouts do
                 type="submit"
                 class="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-[#68756C] transition-colors hover:bg-[#F5F8F5] hover:text-[#17231C]"
               >
-                <.nav_icon name="logout" class="h-5 w-5 text-[#87938A]" />
-                Sign out
+                <.nav_icon name="logout" class="h-5 w-5 text-[#87938A]" /> Sign out
               </button>
             </.form>
           </div>
@@ -237,7 +268,14 @@ defmodule TraceMeetWeb.Layouts do
               aria-controls="app-sidebar"
               class="inline-flex h-10 w-10 items-center justify-center rounded-lg text-[#526057] transition hover:bg-[#F5F8F5] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#087C43]"
             >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="h-6 w-6" aria-hidden="true">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                class="h-6 w-6"
+                aria-hidden="true"
+              >
                 <path stroke-linecap="round" d="M4 6h16M4 12h16M4 18h16" />
               </svg>
             </button>
@@ -260,18 +298,49 @@ defmodule TraceMeetWeb.Layouts do
   def nav_icon(assigns) do
     paths = %{
       "dashboard" => ["M3 3h7v7H3z", "M14 3h7v7h-7z", "M14 14h7v7h-7z", "M3 14h7v7H3z"],
-      "clients" => ["M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2", "M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8", "M20 21v-2a4 4 0 0 0-3-3.87", "M16 3.13a4 4 0 0 1 0 7.75"],
-      "meetings" => ["M8 2v4", "M16 2v4", "M3 10h18", "M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z", "m9 16 2 2 4-4"],
+      "clients" => [
+        "M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2",
+        "M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8",
+        "M20 21v-2a4 4 0 0 0-3-3.87",
+        "M16 3.13a4 4 0 0 1 0 7.75"
+      ],
+      "meetings" => [
+        "M8 2v4",
+        "M16 2v4",
+        "M3 10h18",
+        "M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z",
+        "m9 16 2 2 4-4"
+      ],
       "actions" => ["M9 11l3 3L22 4", "M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"],
-      "ai" => ["M12 3v3", "M5.6 5.6l2.1 2.1", "M3 12h3", "M18 12h3", "M16.3 7.7l2.1-2.1", "M9 16a4 4 0 1 1 6 0c-.8.7-1 1.2-1 2h-4c0-.8-.2-1.3-1-2Z", "M10 21h4"],
-      "settings" => ["M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8Z", "M19.4 13.5a7.8 7.8 0 0 0 0-3l2-1.5-2-3.5-2.4 1a7.8 7.8 0 0 0-2.6-1.5L14 2h-4l-.4 3a7.8 7.8 0 0 0-2.6 1.5l-2.4-1-2 3.5 2 1.5a7.8 7.8 0 0 0 0 3l-2 1.5 2 3.5 2.4-1a7.8 7.8 0 0 0 2.6 1.5l.4 3h4l.4-3a7.8 7.8 0 0 0 2.6-1.5l2.4 1 2-3.5-2-1.5Z"],
+      "ai" => [
+        "M12 3v3",
+        "M5.6 5.6l2.1 2.1",
+        "M3 12h3",
+        "M18 12h3",
+        "M16.3 7.7l2.1-2.1",
+        "M9 16a4 4 0 1 1 6 0c-.8.7-1 1.2-1 2h-4c0-.8-.2-1.3-1-2Z",
+        "M10 21h4"
+      ],
+      "settings" => [
+        "M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8Z",
+        "M19.4 13.5a7.8 7.8 0 0 0 0-3l2-1.5-2-3.5-2.4 1a7.8 7.8 0 0 0-2.6-1.5L14 2h-4l-.4 3a7.8 7.8 0 0 0-2.6 1.5l-2.4-1-2 3.5 2 1.5a7.8 7.8 0 0 0 0 3l-2 1.5 2 3.5 2.4-1a7.8 7.8 0 0 0 2.6 1.5l.4 3h4l.4-3a7.8 7.8 0 0 0 2.6-1.5l2.4 1 2-3.5-2-1.5Z"
+      ],
       "logout" => ["M10 17l5-5-5-5", "M15 12H3", "M12 3h6a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-6"]
     }
 
     assigns = assign(assigns, :paths, Map.fetch!(paths, assigns.name))
 
     ~H"""
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" class={@class} aria-hidden="true">
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="1.7"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      class={@class}
+      aria-hidden="true"
+    >
       <path :for={path <- @paths} d={path} />
     </svg>
     """
@@ -292,5 +361,4 @@ defmodule TraceMeetWeb.Layouts do
     |> String.first()
     |> String.upcase()
   end
-
 end

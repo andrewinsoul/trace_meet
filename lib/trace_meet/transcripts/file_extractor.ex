@@ -31,6 +31,7 @@ defmodule TraceMeet.Transcripts.FileExtractor do
   end
 
   defp validate_content(""), do: {:error, :no_extractable_text}
+
   defp validate_content(content) when byte_size(content) > @max_content_size,
     do: {:error, :extracted_text_too_large}
 

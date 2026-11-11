@@ -146,7 +146,8 @@ defmodule TraceMeetWeb.ClientLive.Form do
 
     case result do
       {:ok, _client} ->
-        message = if socket.assigns.live_action == :new, do: "Client created.", else: "Client updated."
+        message =
+          if socket.assigns.live_action == :new, do: "Client created.", else: "Client updated."
 
         {:noreply,
          socket

@@ -1,4 +1,5 @@
 import Config
+
 if System.get_env("PHX_SERVER") do
   config :trace_meet, TraceMeetWeb.Endpoint, server: true
 end
@@ -12,12 +13,10 @@ if config_env() == :prod do
     ai_model: System.get_env("GROQ_MODEL", "openai/gpt-oss-120b"),
     processing_max_attempts:
       String.to_integer(System.get_env("TRANSCRIPT_PROCESSING_MAX_ATTEMPTS", "5")),
-    chunk_max_attempts:
-      String.to_integer(System.get_env("TRANSCRIPT_CHUNK_MAX_ATTEMPTS", "3")),
+    chunk_max_attempts: String.to_integer(System.get_env("TRANSCRIPT_CHUNK_MAX_ATTEMPTS", "3")),
     chunk_target_tokens:
       String.to_integer(System.get_env("TRANSCRIPT_CHUNK_TARGET_TOKENS", "6000")),
-    chunk_max_tokens:
-      String.to_integer(System.get_env("TRANSCRIPT_CHUNK_MAX_TOKENS", "7000")),
+    chunk_max_tokens: String.to_integer(System.get_env("TRANSCRIPT_CHUNK_MAX_TOKENS", "7000")),
     chunk_overlap_tokens:
       String.to_integer(System.get_env("TRANSCRIPT_CHUNK_OVERLAP_TOKENS", "300")),
     consolidation_max_tokens:
@@ -36,6 +35,7 @@ if config_env() == :prod do
     url: database_url,
     pool_size: String.to_integer(System.get_env("POOL_SIZE") || "10"),
     socket_options: maybe_ipv6
+
   secret_key_base =
     System.get_env("SECRET_KEY_BASE") ||
       raise """

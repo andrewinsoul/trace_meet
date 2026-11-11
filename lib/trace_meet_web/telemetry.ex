@@ -75,7 +75,6 @@ defmodule TraceMeetWeb.Telemetry do
   end
 
   defp periodic_measurements do
-    [
-    ]
+    []
   end
 end

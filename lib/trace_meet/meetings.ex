@@ -10,17 +10,21 @@ defmodule TraceMeet.Meetings do
 
   def list_meetings(user_id, opts \\ []) do
     page = opts |> Keyword.get(:page, 1) |> positive_integer(1)
+
     per_page =
       opts
       |> Keyword.get(:per_page, @default_page_size)
       |> positive_integer(@default_page_size)
       |> min(@max_page_size)
+
     client_id = Keyword.get(opts, :client_id)
 
     query =
       from(m in Meeting,
         join: c in assoc(m, :client),
-        where: m.user_id == ^user_id and c.user_id == ^user_id and is_nil(m.archived_at) and is_nil(c.archived_at),
+        where:
+          m.user_id == ^user_id and c.user_id == ^user_id and is_nil(m.archived_at) and
+            is_nil(c.archived_at),
         preload: [client: c],
         order_by: [desc: coalesce(m.started_at, m.scheduled_at), desc: m.inserted_at]
       )
@@ -118,6 +122,7 @@ defmodule TraceMeet.Meetings do
 
   defp maybe_filter_client(query, nil), do: query
   defp maybe_filter_client(query, ""), do: query
+
   defp maybe_filter_client(query, client_id) do
     case Ecto.UUID.cast(client_id) do
       {:ok, id} -> from(m in query, where: m.client_id == ^id)
@@ -133,5 +138,6 @@ defmodule TraceMeet.Meetings do
       _ -> default
     end
   end
+
   defp positive_integer(_, default), do: default
 end

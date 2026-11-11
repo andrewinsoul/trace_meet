@@ -1,6 +1,7 @@
 defmodule TraceMeet.AI do
   def clean_transcript(content, prompt_snapshot, guardrails_snapshot, model)
-      when is_binary(content) and is_map(prompt_snapshot) and is_map(guardrails_snapshot) and is_binary(model) do
+      when is_binary(content) and is_map(prompt_snapshot) and is_map(guardrails_snapshot) and
+             is_binary(model) do
     provider = Application.get_env(:trace_meet, :ai_provider, TraceMeet.AI.MockProvider)
 
     provider.clean_transcript(
@@ -15,7 +16,10 @@ defmodule TraceMeet.AI do
 
     provider.extract_chunk(
       content,
-      %{system_prompt: stage_prompt(run, "chunk extraction"), guardrails_snapshot: run.guardrails_snapshot},
+      %{
+        system_prompt: stage_prompt(run, "chunk extraction"),
+        guardrails_snapshot: run.guardrails_snapshot
+      },
       run.model
     )
   end
@@ -25,7 +29,10 @@ defmodule TraceMeet.AI do
 
     provider.consolidate(
       extractions,
-      %{system_prompt: stage_prompt(run, "meeting-level consolidation"), guardrails_snapshot: run.guardrails_snapshot},
+      %{
+        system_prompt: stage_prompt(run, "meeting-level consolidation"),
+        guardrails_snapshot: run.guardrails_snapshot
+      },
       run.model
     )
   end
