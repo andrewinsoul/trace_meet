@@ -4,7 +4,18 @@ defmodule TraceMeet.Extractions do
   alias Ecto.Multi
   alias TraceMeet.Repo
   alias TraceMeet.ProcessingRuns.ProcessingRun
-  alias TraceMeet.Extractions.{ExtractionProposal, ExtractionProposalReview, ExtractionProposalSource, ExtractionProposalEvidence, ChunkExtraction}
+  alias TraceMeet.Extractions.{
+    ExtractionProposal,
+    ExtractionProposalReview,
+    ExtractionProposalSource,
+    ExtractionProposalEvidence,
+    ChunkExtraction,
+    Decision,
+    ActionItem,
+    Commitment,
+    Risk,
+    UnresolvedQuestion
+  }
 
   def create_proposals(%ProcessingRun{} = run, proposals, extractions \\ [], segments \\ [])
       when is_list(proposals) and is_list(extractions) and is_list(segments) do
@@ -82,6 +93,71 @@ defmodule TraceMeet.Extractions do
     end
   end
 
+  def list_advisor_proposals(advisor_id, opts \\ []) do
+    status = Keyword.get(opts, :status, "pending")
+    category = Keyword.get(opts, :category)
+    page = max(Keyword.get(opts, :page, 1), 1)
+    page_size = 10
+
+    base_query =
+      from(p in ExtractionProposal,
+        join: r in ProcessingRun,
+        on: r.id == p.processing_run_id,
+        where: r.advisor_id == ^advisor_id
+      )
+
+    base_query =
+      if status in ["pending", "approved", "rejected"],
+        do: where(base_query, [p, _r], p.status == ^status),
+        else: base_query
+
+    base_query =
+      if category in ["decision", "action_item", "commitment", "risk", "unresolved_question"],
+        do: where(base_query, [p, _r], p.category == ^category),
+        else: base_query
+
+    total_count = Repo.aggregate(base_query, :count, :id)
+    total_pages = max(ceil(total_count / page_size), 1)
+    page = min(page, total_pages)
+
+    evidence_query = from(e in ExtractionProposalEvidence, order_by: [asc: e.source_start])
+    reviews_query = from(review in ExtractionProposalReview, order_by: [desc: review.inserted_at])
+
+    entries =
+      base_query
+      |> order_by([p, _r], desc: p.inserted_at)
+      |> limit(^page_size)
+      |> offset(^((page - 1) * page_size))
+      |> preload(
+        [p, _r],
+        processing_run: [transcript: [meeting: :client]],
+        evidence_records: ^evidence_query,
+        reviews: ^reviews_query
+      )
+      |> Repo.all()
+
+    %{
+      entries: entries,
+      page: page,
+      page_size: page_size,
+      total_count: total_count,
+      total_pages: total_pages
+    }
+  end
+
+  def proposal_counts(advisor_id) do
+    Repo.all(
+      from(p in ExtractionProposal,
+        join: r in ProcessingRun,
+        on: r.id == p.processing_run_id,
+        where: r.advisor_id == ^advisor_id,
+        group_by: p.status,
+        select: {p.status, count(p.id)}
+      )
+    )
+    |> Map.new()
+  end
+
   def list_proposals(advisor_id, run_id, opts \\ []) do
     status = Keyword.get(opts, :status)
 
@@ -157,6 +233,13 @@ defmodule TraceMeet.Extractions do
       |> ExtractionProposal.changeset(changes)
       |> repo.update()
     end)
+    |> Multi.run(:operational_record, fn repo, %{proposal: _proposal, updated_proposal: updated} ->
+      if action == "approved" do
+        create_operational_record(repo, updated, advisor_id)
+      else
+        {:ok, nil}
+      end
+    end)
     |> Multi.insert(:review, fn %{proposal: proposal, updated_proposal: updated} ->
       ExtractionProposalReview.changeset(
         %ExtractionProposalReview{
@@ -210,6 +293,7 @@ defmodule TraceMeet.Extractions do
           })
 
         with {:ok, updated} <- repo.update(changeset),
+             {:ok, _record} <- create_operational_record(repo, updated, advisor_id),
              {:ok, _review} <-
                repo.insert(
                  ExtractionProposalReview.changeset(
@@ -236,6 +320,49 @@ defmodule TraceMeet.Extractions do
       {:error, _operation, reason, _changes} -> {:error, reason}
     end
   end
+
+  defp create_operational_record(repo, proposal, advisor_id) do
+    context =
+      repo.one(
+        from(r in ProcessingRun,
+          join: t in assoc(r, :transcript),
+          join: m in assoc(t, :meeting),
+          join: c in assoc(m, :client),
+          where: r.id == ^proposal.processing_run_id and r.advisor_id == ^advisor_id and
+            t.advisor_id == ^advisor_id and m.user_id == ^advisor_id and c.user_id == ^advisor_id,
+          select: %{client_id: c.id, meeting_id: m.id}
+        )
+      )
+
+    case {operational_module(proposal.category), context} do
+      {nil, _} ->
+        {:error, :unsupported_proposal_category}
+
+      {_module, nil} ->
+        {:error, :meeting_context_not_found}
+
+      {module, %{client_id: client_id, meeting_id: meeting_id}} ->
+        attrs = %{
+          advisor_id: advisor_id,
+          client_id: client_id,
+          meeting_id: meeting_id,
+          extraction_proposal_id: proposal.id,
+          title: proposal.title,
+          description: proposal.description,
+          owner: proposal.owner,
+          due_date: proposal.due_date
+        }
+
+        repo.insert(module.changeset(struct(module), attrs))
+    end
+  end
+
+  defp operational_module("decision"), do: Decision
+  defp operational_module("action_item"), do: ActionItem
+  defp operational_module("commitment"), do: Commitment
+  defp operational_module("risk"), do: Risk
+  defp operational_module("unresolved_question"), do: UnresolvedQuestion
+  defp operational_module(_category), do: nil
 
   defp proposal_values(proposal) do
     Map.take(proposal, [

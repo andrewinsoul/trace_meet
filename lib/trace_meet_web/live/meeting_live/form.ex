@@ -227,12 +227,27 @@ defmodule TraceMeetWeb.MeetingLive.Form do
               <.input field={@form[:meeting_at]} type="datetime-local" label="Meeting date and time" />
               <div class="space-y-1.5">
                 <label for="meeting-status" class="block text-sm font-medium text-[#26352B]">Meeting status</label>
-                <select id="meeting-status" name="meeting[status]" class="block w-full rounded-lg border border-[#DCE5DE] bg-white px-3.5 py-3 text-sm text-[#17231C] outline-none focus:border-[#087C43] focus:ring-4 focus:ring-[#087C43]/10">
+                <select
+                  id="meeting-status"
+                  name="meeting[status]"
+                  aria-invalid={@form[:status].errors != []}
+                  aria-describedby={if @form[:status].errors != [], do: "meeting-status-errors"}
+                  class={[
+                    "block w-full rounded-lg border bg-white px-3.5 py-3 text-sm text-[#17231C] outline-none focus:ring-4",
+                    @form[:status].errors == [] && "border-[#DCE5DE] focus:border-[#087C43] focus:ring-[#087C43]/10",
+                    @form[:status].errors != [] && "border-red-500 focus:border-red-500 focus:ring-red-500/10"
+                  ]}
+                >
                   <option value="scheduled" selected={@form[:status].value == "scheduled"}>Scheduled</option>
                   <option value="in_progress" selected={@form[:status].value == "in_progress"}>In progress</option>
                   <option value="completed" selected={@form[:status].value == "completed"}>Completed (already happened)</option>
                   <option value="cancelled" selected={@form[:status].value == "cancelled"}>Cancelled</option>
                 </select>
+                <div :if={@form[:status].errors != []} id="meeting-status-errors" class="mt-1 space-y-1" role="alert">
+                  <p :for={{message, _opts} <- @form[:status].errors} class="text-sm text-red-600">
+                    {message}
+                  </p>
+                </div>
               </div>
             </div>
             <p class="text-xs leading-5 text-[#87938A]">

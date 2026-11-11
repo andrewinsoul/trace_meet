@@ -44,6 +44,7 @@ defmodule TraceMeet.MixProject do
       {:req, "~> 0.5"},
       {:oban, "~> 2.19"},
       {:ex_pdf, "~> 1.0"},
+      {:tiktokenex, "~> 0.1.0", runtime: false},
       {:tzdata, "~> 1.1"},
       {:telemetry_metrics, "~> 1.0"},
       {:telemetry_poller, "~> 1.0"},
@@ -56,7 +57,8 @@ defmodule TraceMeet.MixProject do
 
   defp aliases do
     [
-      setup: ["deps.get", "ecto.setup", "assets.setup", "assets.build"],
+      setup: ["deps.get", "tokenizer.install", "ecto.setup", "assets.setup", "assets.build"],
+      release: ["tokenizer.install", "release"],
       "ecto.setup": ["ecto.create", "ecto.migrate", "run priv/repo/seeds.exs"],
       "ecto.reset": ["ecto.drop", "ecto.setup"],
       test: ["ecto.create --quiet", "ecto.migrate --quiet", "test"],

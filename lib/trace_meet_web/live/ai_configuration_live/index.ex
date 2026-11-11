@@ -241,7 +241,11 @@ defmodule TraceMeetWeb.AIConfigurationLive.Index do
                   <label class="mb-1.5 block text-sm font-medium text-[#26352B]">
                     Specify meeting type
                   </label>
-                  <.input field={@form[:other_meeting_type]} required placeholder="e.g. Regulatory compliance" />
+                  <.input
+                    field={@form[:other_meeting_type]}
+                    required
+                    placeholder="e.g. Regulatory compliance"
+                  />
                 </div>
               </div>
               <div>
@@ -287,29 +291,71 @@ defmodule TraceMeetWeb.AIConfigurationLive.Index do
           </section>
         </section>
 
-        <aside class="h-fit self-start rounded-2xl border border-[#E5EBE6] py-8 bg-white p-5 sm:p-6">
-          <h2 class="text-lg font-semibold text-[#26352B]">TraceMeet guardrails</h2>
-          <p class="mt-1 text-sm leading-6 text-[#68756C]">
-            These platform-wide rules are seeded and versioned separately. They are included automatically and cannot be changed from advisor settings.
-          </p>
-          <div :for={guardrail <- @guardrails} class="border-t border-[#EEF2EF] py-4 first:mt-4">
-            <div class="flex items-center justify-between gap-2">
-              <h3 class="text-sm font-semibold text-[#26352B]">{guardrail.name}</h3>
-              <div class="flex items-center gap-2">
-                <span class="rounded-full bg-[#F0F4F1] px-2 py-1 text-[10px] font-medium text-[#526057]">
-                  {if guardrail.scope == "global",
-                    do: "Global",
-                    else: TraceMeet.Meetings.Types.label(guardrail.meeting_type)}
+        <aside class="h-fit self-start rounded-2xl border border-[#E5EBE6] bg-white p-5 sm:p-6">
+          <details class="group">
+            <summary class="flex cursor-pointer list-none items-start justify-between gap-4">
+              <div>
+                <h2 class="text-lg font-semibold text-[#26352B]">TraceMeet guardrails</h2>
+                <p class="mt-1 text-sm leading-6 text-[#68756C]">
+                  These platform-wide rules are seeded and versioned separately. They are included automatically and cannot be changed from advisor settings.
+                </p>
+              </div>
+              <span
+                aria-hidden="true"
+                class="mt-1 shrink-0 text-lg leading-none text-[#68756C]"
+              >
+                <span class="inline-flex group-open:hidden" aria-hidden="true">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    class="h-5 w-5"
+                  >
+                    <path d="m6 9 6 6 6-6" />
+                  </svg>
                 </span>
-                <span class="text-[11px] text-[#87938A]">v{guardrail.active_version}</span>
+
+                <span class="hidden group-open:inline-flex" aria-hidden="true">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    class="h-5 w-5"
+                  >
+                    <path d="m18 15-6-6-6 6" />
+                  </svg>
+                </span>
+              </span>
+            </summary>
+            <div class="mt-4">
+              <div :for={guardrail <- @guardrails} class="border-t border-[#EEF2EF] py-4 first:mt-4">
+                <div class="flex items-center justify-between gap-2">
+                  <h3 class="text-sm font-semibold text-[#26352B]">{guardrail.name}</h3>
+                  <div class="flex items-center gap-2">
+                    <span class="rounded-full bg-[#F0F4F1] px-2 py-1 text-[10px] font-medium text-[#526057]">
+                      {if guardrail.scope == "global",
+                        do: "Global",
+                        else: TraceMeet.Meetings.Types.label(guardrail.meeting_type)}
+                    </span>
+                    <span class="text-[11px] text-[#87938A]">v{guardrail.active_version}</span>
+                  </div>
+                </div>
+                <p class="mt-1 text-xs leading-5 text-[#68756C]">
+                  {guardrail.versions
+                  |> Enum.find(&(&1.version == guardrail.active_version))
+                  |> then(fn version -> version && version.instruction end)}
+                </p>
               </div>
             </div>
-            <p class="mt-1 text-xs leading-5 text-[#68756C]">
-              {guardrail.versions
-              |> Enum.find(&(&1.version == guardrail.active_version))
-              |> then(fn version -> version && version.instruction end)}
-            </p>
-          </div>
+          </details>
         </aside>
       </div>
     </Layouts.workspace>

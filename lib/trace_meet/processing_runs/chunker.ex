@@ -24,9 +24,7 @@ defmodule TraceMeet.ProcessingRuns.Chunker do
   end
 
   def estimated_tokens(text) when is_binary(text) do
-    # Conservative estimate until a tokenizer for the configured model is installed.
-    words = Regex.scan(~r/[\p{L}\p{N}]+|[^\s\p{L}\p{N}]/u, text)
-    max(length(words), div(byte_size(text) + 3, 4))
+    TraceMeet.AI.Tokenizer.count(text)
   end
 
   defp build_chunks([], _segments, _target, _max, _overlap, acc), do: {:ok, Enum.reverse(acc)}

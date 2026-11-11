@@ -34,9 +34,9 @@ defmodule TraceMeetWeb.UIComponents do
           aria-invalid={@errors != []}
           aria-describedby={if @errors != [], do: "#{@field.id}-errors"}
           class={[
-            "block w-full rounded-lg border bg-white px-3.5 py-3 text-sm text-[#17231C] shadow-sm outline-none transition",
+            "block w-full rounded-lg border bg-white px-3.5 py-3 text-sm !text-[#17231C] shadow-sm outline-none transition",
             @type == "password" && "pr-11",
-            "placeholder:text-[#9AA69D] focus:border-[#087C43] focus:ring-4 focus:ring-[#087C43]/10",
+            "!placeholder:text-[#9AA69D] focus:border-[#087C43] focus:ring-4 focus:ring-[#087C43]/10",
             @errors == [] && "border-[#DCE5DE]",
             @errors != [] && "border-red-500 focus:border-red-500 focus:ring-red-500/10",
             @class
@@ -114,8 +114,8 @@ defmodule TraceMeetWeb.UIComponents do
         aria-invalid={@errors != []}
         aria-describedby={if @errors != [], do: "#{@field.id}-errors"}
         class={[
-          "block w-full rounded-lg border bg-white px-3.5 py-3 text-sm text-[#17231C] shadow-sm outline-none transition",
-          "placeholder:text-[#9AA69D] focus:border-[#087C43] focus:ring-4 focus:ring-[#087C43]/10",
+          "block w-full rounded-lg border bg-white px-3.5 py-3 text-sm !text-[#17231C] shadow-sm outline-none transition",
+          "!placeholder:text-[#9AA69D] focus:border-[#087C43] focus:ring-4 focus:ring-[#087C43]/10",
           @errors == [] && "border-[#DCE5DE]",
           @errors != [] && "border-red-500 focus:border-red-500 focus:ring-red-500/10",
           @class
