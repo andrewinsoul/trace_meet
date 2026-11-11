@@ -54,8 +54,8 @@ defmodule TraceMeetWeb.Router do
       live "/meetings/:id/edit", MeetingLive.Form, :edit
       live "/clients/:client_id/meetings/new", MeetingLive.Form, :new
       live "/settings/ai-configuration", AIConfigurationLive.Index, :index
-      live "/settings/profile", PlaceholderLive, :settings_profile
-      live "/settings/preferences", PlaceholderLive, :settings_preferences
+      live "/settings/profile", ProfileLive.Index, :index
+      live "/settings/preferences", PreferencesLive.Index, :index
       live "/settings/security", PlaceholderLive, :settings_security
       live "/actions", ActionsLive.Index, :index
       live "/settings", PlaceholderLive, :settings
