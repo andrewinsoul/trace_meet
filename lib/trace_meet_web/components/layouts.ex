@@ -79,9 +79,7 @@ defmodule TraceMeetWeb.Layouts do
         %{key: :dashboard, label: "Dashboard", path: ~p"/dashboard", icon: "dashboard"},
         %{key: :clients, label: "Clients", path: ~p"/clients", icon: "clients"},
         %{key: :meetings, label: "Meetings", path: ~p"/meetings", icon: "meetings"},
-        %{key: :actions, label: "Action items", path: ~p"/actions", icon: "actions"},
-        %{key: :ai_configuration, label: "AI Configuration", path: ~p"/ai-configuration", icon: "ai"},
-        %{key: :settings, label: "Settings", path: ~p"/settings", icon: "settings"}
+        %{key: :actions, label: "Action items", path: ~p"/actions", icon: "actions"}
       ])
 
     ~H"""
@@ -136,6 +134,76 @@ defmodule TraceMeetWeb.Layouts do
               >
               </span>
             </.link>
+            <details
+              id="settings-navigation"
+              class="group"
+              open={@active_page in [:settings, :settings_profile, :settings_preferences, :settings_security, :ai_configuration]}
+            >
+              <summary
+                class={[
+                  "flex cursor-pointer list-none items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors [&::-webkit-details-marker]:hidden",
+                  @active_page in [:settings, :settings_profile, :settings_preferences, :settings_security, :ai_configuration] &&
+                    "bg-[#EAF5EE] text-[#087C43]",
+                  @active_page not in [:settings, :settings_profile, :settings_preferences, :settings_security, :ai_configuration] &&
+                    "text-[#59665D] hover:bg-[#F5F8F5] hover:text-[#17231C]"
+                ]}
+                aria-label="Toggle Settings menu"
+              >
+                <.nav_icon
+                  name="settings"
+                  class={[
+                    "h-5 w-5 shrink-0",
+                    @active_page in [:settings, :settings_profile, :settings_preferences, :settings_security, :ai_configuration] &&
+                      "text-[#087C43]",
+                    @active_page not in [:settings, :settings_profile, :settings_preferences, :settings_security, :ai_configuration] &&
+                      "text-[#87938A] group-hover:text-[#526057]"
+                  ]}
+                />
+                <span class="flex-1">Settings</span>
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  class="h-4 w-4 shrink-0 transition-transform group-open:rotate-180"
+                  aria-hidden="true"
+                >
+                  <path d="m6 9 6 6 6-6" />
+                </svg>
+              </summary>
+              <div class="ml-5 mt-1 space-y-1 border-l border-[#E5EBE6] pl-4">
+                <.link
+                  :for={
+                    {label, path, key} <- [
+                      {"Profile", ~p"/settings/profile", :settings_profile},
+                      {"Preferences", ~p"/settings/preferences", :settings_preferences},
+                      {"Security", ~p"/settings/security", :settings_security},
+                      {"AI Configuration", ~p"/settings/ai-configuration", :ai_configuration}
+                    ]
+                  }
+                  navigate={path}
+                  phx-click={close_sidebar()}
+                  aria-current={if @active_page == key, do: "page"}
+                  class={[
+                    "flex items-center rounded-lg px-3 py-2.5 text-sm transition-colors",
+                    @active_page == key &&
+                      "bg-[#EAF5EE] font-semibold text-[#087C43] shadow-[inset_2px_0_0_#087C43]",
+                    @active_page != key &&
+                      "text-[#68756C] hover:bg-[#F5F8F5] hover:text-[#17231C]"
+                  ]}
+                >
+                  {label}
+                  <span
+                    :if={@active_page == key}
+                    class="ml-auto h-1.5 w-1.5 rounded-full bg-[#087C43]"
+                    aria-hidden="true"
+                  >
+                  </span>
+                </.link>
+              </div>
+            </details>
           </nav>
 
           <div class="border-t border-[#EEF2EF] p-4">
@@ -196,7 +264,7 @@ defmodule TraceMeetWeb.Layouts do
       "meetings" => ["M8 2v4", "M16 2v4", "M3 10h18", "M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z", "m9 16 2 2 4-4"],
       "actions" => ["M9 11l3 3L22 4", "M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"],
       "ai" => ["M12 3v3", "M5.6 5.6l2.1 2.1", "M3 12h3", "M18 12h3", "M16.3 7.7l2.1-2.1", "M9 16a4 4 0 1 1 6 0c-.8.7-1 1.2-1 2h-4c0-.8-.2-1.3-1-2Z", "M10 21h4"],
-      "settings" => ["M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8", "M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-1.7 2.94-.08-.02a1.7 1.7 0 0 0-1.7.5l-.06.06h-3.4l-.03-.08a1.7 1.7 0 0 0-1.3-1.15l-.08-.02-1.7-2.94.06-.06A1.7 1.7 0 0 0 9.8 14.3l-.08-.02v-3.4l.08-.03a1.7 1.7 0 0 0 1.15-1.3l.02-.08 2.94-1.7.06.06a1.7 1.7 0 0 0 1.88.34l.06-.06h3.4l.03.08a1.7 1.7 0 0 0 1.3 1.15l.08.02v3.4l-.08.03A1.7 1.7 0 0 0 19.4 15Z"],
+      "settings" => ["M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8Z", "M19.4 13.5a7.8 7.8 0 0 0 0-3l2-1.5-2-3.5-2.4 1a7.8 7.8 0 0 0-2.6-1.5L14 2h-4l-.4 3a7.8 7.8 0 0 0-2.6 1.5l-2.4-1-2 3.5 2 1.5a7.8 7.8 0 0 0 0 3l-2 1.5 2 3.5 2.4-1a7.8 7.8 0 0 0 2.6 1.5l.4 3h4l.4-3a7.8 7.8 0 0 0 2.6-1.5l2.4 1 2-3.5-2-1.5Z"],
       "logout" => ["M10 17l5-5-5-5", "M15 12H3", "M12 3h6a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-6"]
     }
 

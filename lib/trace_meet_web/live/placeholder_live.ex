@@ -15,6 +15,27 @@ defmodule TraceMeetWeb.PlaceholderLive do
       description: "Manage your TraceMeet workspace preferences.",
       message: "Workspace settings are coming later",
       detail: "We'll add the essential account and workspace preferences here when they're needed."
+    },
+    settings_profile: %{
+      title: "Profile",
+      eyebrow: "ACCOUNT SETTINGS",
+      description: "Manage your advisor profile and account information.",
+      message: "Profile settings are coming soon",
+      detail: "Your profile information and account details will be available here."
+    },
+    settings_preferences: %{
+      title: "Preferences",
+      eyebrow: "PERSONAL PREFERENCES",
+      description: "Customize how dates, times and other workspace details are presented.",
+      message: "Preferences are coming soon",
+      detail: "Your regional and display preferences will be available here."
+    },
+    settings_security: %{
+      title: "Security",
+      eyebrow: "ACCOUNT SECURITY",
+      description: "Manage your password and account security.",
+      message: "Security settings are coming soon",
+      detail: "Password management and session information will be available here."
     }
   }
 
