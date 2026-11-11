@@ -55,7 +55,7 @@ defmodule TraceMeet.MixProject do
       {:req, "~> 0.5"},
       {:oban, "~> 2.19"},
       {:ex_pdf, "~> 1.0"},
-      {:tiktokenex, "~> 0.1.0", runtime: false},
+      {:tiktokenex, "~> 0.1.0"},
       {:tzdata, "~> 1.1"},
       {:telemetry_metrics, "~> 1.0"},
       {:telemetry_poller, "~> 1.0"},
