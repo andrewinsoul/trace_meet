@@ -63,4 +63,4 @@ COPY --from=builder --chown=nobody:root \
 
 USER nobody
 
-CMD ["/app/bin/server"]
+CMD ["/app/bin/trace_meet", "start"]
