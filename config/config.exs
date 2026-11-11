@@ -1,17 +1,8 @@
-# This file is responsible for configuring your application
-# and its dependencies with the aid of the Config module.
-#
-# This configuration file is loaded before any dependency and
-# is restricted to this project.
-
-# General application configuration
 import Config
 
 config :trace_meet,
   ecto_repos: [TraceMeet.Repo],
   generators: [timestamp_type: :utc_datetime]
-
-# Configure the endpoint
 config :trace_meet, TraceMeetWeb.Endpoint,
   url: [host: "localhost"],
   adapter: Bandit.PhoenixAdapter,
@@ -21,17 +12,21 @@ config :trace_meet, TraceMeetWeb.Endpoint,
   ],
   pubsub_server: TraceMeet.PubSub,
   live_view: [signing_salt: "iAJaJeai"]
-
-# Configure the mailer
-#
-# By default it uses the "Local" adapter which stores the emails
-# locally. You can see the emails in your browser, at "/dev/mailbox".
-#
-# For production it's recommended to configure a different adapter
-# at the `config/runtime.exs`.
 config :trace_meet, TraceMeet.Mailer, adapter: Swoosh.Adapters.Local
+config :trace_meet, Oban,
+  repo: TraceMeet.Repo,
+  queues: [transcript_processing: 2],
+  plugins: [{Oban.Plugins.Pruner, max_age: 60 * 60 * 24 * 7}]
 
-# Configure esbuild (the version is required)
+config :trace_meet,
+  ai_provider: TraceMeet.AI.MockProvider,
+  ai_model: "openai/gpt-oss-120b",
+  processing_max_attempts: 5,
+  chunk_max_attempts: 3,
+  chunk_target_tokens: 6_000,
+  chunk_max_tokens: 7_000,
+  chunk_overlap_tokens: 300,
+  consolidation_max_tokens: 12_000
 config :esbuild,
   version: "0.25.4",
   trace_meet: [
@@ -40,8 +35,6 @@ config :esbuild,
     cd: Path.expand("../assets", __DIR__),
     env: %{"NODE_PATH" => [Path.expand("../deps", __DIR__), Mix.Project.build_path()]}
   ]
-
-# Configure tailwind (the version is required)
 config :tailwind,
   version: "4.1.12",
   trace_meet: [
@@ -51,15 +44,8 @@ config :tailwind,
     ),
     cd: Path.expand("..", __DIR__)
   ]
-
-# Configure Elixir's Logger
 config :logger, :default_formatter,
   format: "$time $metadata[$level] $message\n",
   metadata: [:request_id]
-
-# Use Jason for JSON parsing in Phoenix
 config :phoenix, :json_library, Jason
-
-# Import environment specific config. This must remain at the bottom
-# of this file so it overrides the configuration defined above.
 import_config "#{config_env()}.exs"

@@ -1,31 +1,23 @@
 defmodule TraceMeet.Application do
-  # See https://hexdocs.pm/elixir/Application.html
-  # for more information on OTP Applications
   @moduledoc false
 
   use Application
 
   @impl true
   def start(_type, _args) do
+    :ok = TraceMeet.AI.Tokenizer.initialize()
+
     children = [
       TraceMeetWeb.Telemetry,
       TraceMeet.Repo,
       {DNSCluster, query: Application.get_env(:trace_meet, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: TraceMeet.PubSub},
-      # Start a worker by calling: TraceMeet.Worker.start_link(arg)
-      # {TraceMeet.Worker, arg},
-      # Start to serve requests, typically the last entry
+      {Oban, Application.fetch_env!(:trace_meet, Oban)},
       TraceMeetWeb.Endpoint
     ]
-
-    # See https://hexdocs.pm/elixir/Supervisor.html
-    # for other strategies and supported options
     opts = [strategy: :one_for_one, name: TraceMeet.Supervisor]
     Supervisor.start_link(children, opts)
   end
-
-  # Tell Phoenix to update the endpoint configuration
-  # whenever the application is updated.
   @impl true
   def config_change(changed, _new, removed) do
     TraceMeetWeb.Endpoint.config_change(changed, removed)
