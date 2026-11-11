@@ -31,6 +31,57 @@ defmodule TraceMeet.Accounts do
     end
   end
 
+  def update_user_password(%User{} = user, attrs) when is_map(attrs) do
+    current_password = Map.get(attrs, "current_password") || Map.get(attrs, :current_password)
+
+    if TraceMeet.Accounts.Password.verify(current_password, user.hashed_password) do
+      changeset = User.password_changeset(user, attrs)
+
+      if changeset.valid? do
+        password = Ecto.Changeset.get_field(changeset, :password)
+
+        changeset
+        |> Ecto.Changeset.put_change(:hashed_password, TraceMeet.Accounts.Password.hash(password))
+        |> Repo.update()
+        |> case do
+          {:ok, updated_user} ->
+            {:ok,
+             %{
+               updated_user
+               | current_password: nil,
+                 password: nil,
+                 password_confirmation: nil
+             }}
+
+          error ->
+            error
+        end
+      else
+        {:error, changeset}
+      end
+    else
+      {:error, :invalid_current_password}
+    end
+  end
+
+  def delete_user_session_tokens(%User{id: user_id}) do
+    from(t in UserToken, where: t.user_id == ^user_id and t.context == "session")
+    |> Repo.delete_all()
+
+    :ok
+  end
+
+  def initialize_user_time_zone(%User{time_zone: nil} = user, time_zone)
+      when is_binary(time_zone) do
+    if valid_time_zone?(time_zone) do
+      update_user_time_zone(user, time_zone)
+    else
+      {:ok, user}
+    end
+  end
+
+  def initialize_user_time_zone(%User{} = user, _time_zone), do: {:ok, user}
+
   def update_user_time_zone(%User{time_zone: time_zone} = user, time_zone)
       when is_binary(time_zone),
       do: {:ok, user}

@@ -123,7 +123,7 @@ defmodule TraceMeetWeb.MeetingLive.Show do
   end
 
   def handle_event("create_default_prompt", _params, socket) do
-    {:noreply, push_navigate(socket, to: ~p"/ai-configuration?new=true")}
+    {:noreply, push_navigate(socket, to: ~p"/settings/ai-configuration?new=true")}
   end
 
   def handle_event("process_transcript", _params, socket) do

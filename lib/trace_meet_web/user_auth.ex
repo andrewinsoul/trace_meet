@@ -53,15 +53,19 @@ defmodule TraceMeetWeb.UserAuth do
 
       user ->
         user =
-          case Phoenix.LiveView.get_connect_params(socket) do
-            %{"time_zone" => time_zone} when is_binary(time_zone) ->
-              case Accounts.update_user_time_zone(user, time_zone) do
-                {:ok, updated_user} -> updated_user
-                _ -> user
-              end
+          if is_nil(user.time_zone) do
+            case Phoenix.LiveView.get_connect_params(socket) do
+              %{"time_zone" => time_zone} when is_binary(time_zone) ->
+                case Accounts.initialize_user_time_zone(user, time_zone) do
+                  {:ok, initialized_user} -> initialized_user
+                  _ -> user
+                end
 
-            _ ->
-              user
+              _ ->
+                user
+            end
+          else
+            user
           end
 
         {:cont, Phoenix.Component.assign(socket, :current_user, user)}
