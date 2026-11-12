@@ -28,9 +28,16 @@ COPY . .
 RUN mix deps.get --only "$MIX_ENV" \
     && mix deps.compile \
     && mix compile \
+    && mkdir -p deps/tiktokenex/priv/ranks \
+    && cp priv/tiktokenex/ranks/*.tiktoken deps/tiktokenex/priv/ranks/ \
     && mix tokenizer.install \
     && mix assets.deploy \
-    && mix release trace_meet
+    && mix release trace_meet \
+    && mkdir -p _build/prod/rel/trace_meet/lib/tiktokenex-0.1.0/priv/ranks \
+    && cp priv/tiktokenex/ranks/*.tiktoken \
+        _build/prod/rel/trace_meet/lib/tiktokenex-0.1.0/priv/ranks/ \
+    && test -s _build/prod/rel/trace_meet/lib/tiktokenex-0.1.0/priv/ranks/cl100k_base.tiktoken \
+    && test -s _build/prod/rel/trace_meet/lib/tiktokenex-0.1.0/priv/ranks/o200k_base.tiktoken
 
 FROM ${RUNNER_IMAGE} AS runner
 
