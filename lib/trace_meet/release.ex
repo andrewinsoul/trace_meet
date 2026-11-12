@@ -1,4 +1,3 @@
-
 defmodule TraceMeet.Release do
   @app :trace_meet
 
