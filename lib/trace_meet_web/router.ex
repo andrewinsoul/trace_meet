@@ -58,7 +58,6 @@ defmodule TraceMeetWeb.Router do
       live "/settings/preferences", PreferencesLive.Index, :index
       live "/settings/security", SecurityLive.Index, :index
       live "/actions", ActionsLive.Index, :index
-      live "/settings", PlaceholderLive, :settings
     end
   end
 
