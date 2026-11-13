@@ -33,6 +33,7 @@ if config_env() == :prod do
 
   config :trace_meet, TraceMeet.Repo,
     url: database_url,
+    idle_interval: :timer.hours(24),
     pool_size: String.to_integer(System.get_env("POOL_SIZE") || "10"),
     ssl: System.get_env("DATABASE_SSL", "false") == "true",
     socket_options: maybe_ipv6
