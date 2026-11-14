@@ -18,8 +18,12 @@ config :trace_meet, TraceMeet.Mailer, adapter: Swoosh.Adapters.Local
 
 config :trace_meet, Oban,
   repo: TraceMeet.Repo,
-  queues: [transcript_processing: 2],
-  plugins: [{Oban.Plugins.Pruner, max_age: 60 * 60 * 24 * 7}]
+  queues: [transcript_processing: 2, maintenance: 1],
+  plugins: [
+    {Oban.Plugins.Pruner, max_age: 60 * 60 * 24 * 7},
+    {Oban.Plugins.Cron,
+     crontab: [{"0 3 * * *", TraceMeet.ProcessingRuns.CleanupExpiredDataWorker}]}
+  ]
 
 config :trace_meet,
   ai_provider: TraceMeet.AI.MockProvider,

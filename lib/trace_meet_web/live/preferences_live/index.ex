@@ -20,7 +20,9 @@ defmodule TraceMeetWeb.PreferencesLive.Index do
        selected_time_zone: current_time_zone,
        time_zone_search: "",
        time_zone_results: [],
-       time_zone_selector_open: false
+       time_zone_selector_open: false,
+       selected_retention_days: socket.assigns.current_user.processing_data_retention_days || 30,
+       retention_options: Accounts.processing_data_retention_options()
      )}
   end
 
@@ -90,6 +92,31 @@ defmodule TraceMeetWeb.PreferencesLive.Index do
       {:error, _changeset} ->
         {:noreply,
          put_flash(socket, :error, "Your preferences could not be saved. Please try again.")}
+    end
+  end
+
+  def handle_event("save_retention", %{"retention" => %{"days" => days}}, socket) do
+    case Integer.parse(days) do
+      {days, ""} ->
+        case Accounts.update_processing_data_retention(socket.assigns.current_user, days) do
+          {:ok, user} ->
+            {:noreply,
+             socket
+             |> assign(
+               current_user: user,
+               selected_retention_days: user.processing_data_retention_days
+             )
+             |> put_flash(:info, "Processing data retention preference updated.")}
+
+          {:error, :invalid_retention_period} ->
+            {:noreply, put_flash(socket, :error, "Choose a valid retention period.")}
+
+          {:error, _changeset} ->
+            {:noreply, put_flash(socket, :error, "Your retention preference could not be saved.")}
+        end
+
+      _ ->
+        {:noreply, put_flash(socket, :error, "Choose a valid retention period.")}
     end
   end
 
@@ -256,6 +283,53 @@ defmodule TraceMeetWeb.PreferencesLive.Index do
           </p>
         </aside>
       </div>
+
+      <section class="mt-6 rounded-2xl border border-[#E5EBE6] bg-white p-5 sm:p-7">
+        <div class="border-b border-[#EEF2EF] pb-5">
+          <h2 class="text-base font-semibold text-[#26352B]">Processing data retention</h2>
+          <p class="mt-1 max-w-3xl text-sm leading-6 text-[#68756C]">
+            Choose how long TraceMeet keeps temporary transcript-processing data after you have reviewed all extracted proposals. This includes processing chunks and intermediate extraction results. Your original transcript, approved records, rejected proposals, review history, and processing history are not deleted by this cleanup.
+          </p>
+          <p class="mt-2 text-sm leading-6 text-[#68756C]">
+            The retention period starts from the time you finish reviewing the proposals. Changing this setting also applies to existing, uncleaned processing data. If you shorten the period, data that is already older than the new period becomes eligible for the next cleanup.
+          </p>
+          <p class="mt-2 text-xs leading-5 text-[#87938A]">
+            TraceMeet checks for expired data once per day. Actual deletion may happen later if the application is asleep or a cleanup attempt needs to be retried.
+          </p>
+        </div>
+
+        <.form
+          for={to_form(%{"days" => @selected_retention_days}, as: :retention)}
+          phx-submit="save_retention"
+          class="pt-6"
+        >
+          <label for="processing-data-retention" class="mb-2 block text-sm font-medium text-[#26352B]">
+            Keep temporary processing data for
+          </label>
+          <select
+            id="processing-data-retention"
+            name="retention[days]"
+            class="w-full max-w-sm rounded-lg border border-[#DCE5DE] bg-white px-3.5 py-3 text-sm text-[#17231C] outline-none focus:border-[#087C43] focus:ring-4 focus:ring-[#087C43]/10"
+          >
+            <option
+              :for={days <- @retention_options}
+              value={days}
+              selected={days == @selected_retention_days}
+            >
+              {days} days
+            </option>
+          </select>
+          <div class="mt-6 border-t border-[#EEF2EF] pt-5 flex justify-end">
+            <button
+              type="submit"
+              phx-disable-with="Saving..."
+              class="inline-flex items-center justify-center rounded-lg bg-[#087C43] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#066B39] focus:outline-none focus:ring-4 focus:ring-[#087C43]/20 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              Save retention preference
+            </button>
+          </div>
+        </.form>
+      </section>
     </Layouts.workspace>
     """
   end

@@ -96,6 +96,25 @@ defmodule TraceMeet.Accounts do
     end
   end
 
+  @processing_data_retention_options [7, 14, 30, 60, 90]
+
+  def processing_data_retention_options, do: @processing_data_retention_options
+
+  def update_processing_data_retention(%User{} = user, days)
+      when is_integer(days) and days in @processing_data_retention_options do
+    user
+    |> Ecto.Changeset.cast(%{processing_data_retention_days: days}, [
+      :processing_data_retention_days
+    ])
+    |> Ecto.Changeset.validate_inclusion(
+      :processing_data_retention_days,
+      @processing_data_retention_options
+    )
+    |> Repo.update()
+  end
+
+  def update_processing_data_retention(%User{}, _days), do: {:error, :invalid_retention_period}
+
   def valid_time_zone?(time_zone) do
     time_zone == "Etc/UTC" or
       time_zone in Tzdata.zone_list()
