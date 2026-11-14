@@ -54,6 +54,7 @@ defmodule TraceMeet.MixProject do
       {:swoosh, "~> 1.16"},
       {:req, "~> 0.5"},
       {:oban, "~> 2.19"},
+      {:nature_whistle, "~> 0.4.6"},
       {:ex_pdf, "~> 1.0"},
       {:tiktokenex, "~> 0.1.0"},
       {:tzdata, "~> 1.1"},

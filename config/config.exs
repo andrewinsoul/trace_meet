@@ -25,6 +25,47 @@ config :trace_meet, Oban,
      crontab: [{"0 3 * * *", TraceMeet.ProcessingRuns.CleanupExpiredDataWorker}]}
   ]
 
+config :nature_whistle,
+  default_notifiers: if(config_env() == :dev, do: [:console], else: [:slack_primary]),
+  retry: [
+    max_attempts: 5,
+    base_delay_ms: 1_000,
+    max_delay_ms: 60_000
+  ],
+  notifiers_config: [
+    %{name: :console, service: :console, config: %{}}
+  ],
+  alerts: [],
+  packs: [
+    {
+      NatureWhistle.Packs.Beam,
+      thresholds: [
+        memory: 1_073_741_824,
+        process_count: 50_000,
+        run_queue: 4
+      ]
+    },
+    {
+      NatureWhistle.Packs.Ecto,
+      repo: TraceMeet.Repo,
+      thresholds: [
+        slow_query: 1_000,
+        slow_queue: 50
+      ]
+    },
+    {
+      NatureWhistle.Packs.Oban,
+      thresholds: [
+        slow_job: 5_000,
+        slow_queue: 1_000
+      ],
+      failure_detection: [
+        failures: 10,
+        within_ms: 300_000
+      ]
+    }
+  ]
+
 config :trace_meet,
   ai_provider: TraceMeet.AI.MockProvider,
   ai_model: "openai/gpt-oss-120b",

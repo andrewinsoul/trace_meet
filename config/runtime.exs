@@ -38,6 +38,17 @@ if config_env() == :prod do
     ssl: System.get_env("DATABASE_SSL", "false") == "true",
     socket_options: maybe_ipv6
 
+  config :nature_whistle, :notifiers_config, [
+    %{name: :console, service: :console, config: %{}},
+    %{
+      name: :slack_primary,
+      service: :slack,
+      config: %{
+        webhook_url: System.fetch_env!("SLACK_WEBHOOK_URL")
+      }
+    }
+  ]
+
   secret_key_base =
     System.get_env("SECRET_KEY_BASE") ||
       raise """

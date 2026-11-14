@@ -13,6 +13,7 @@ defmodule TraceMeet.Application do
       {DNSCluster, query: Application.get_env(:trace_meet, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: TraceMeet.PubSub},
       {Oban, Application.fetch_env!(:trace_meet, Oban)},
+      {NatureWhistle.Supervisor, []},
       TraceMeetWeb.Endpoint
     ]
 
